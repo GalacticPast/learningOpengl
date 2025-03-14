@@ -14,7 +14,7 @@ ifeq ($(OS),Windows_NT)
 	build_platform := windows
 	
 	rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
-	src_files := $(call rwildcard,$(src_dir)/,*.cpp)
+	src_files := $(shell find $(src_dir) -type f -name '*[.cpp,.c]')
 	directories := $(shell dir src /b /a:d)
 	obj_files := $(patsubst %.cpp, $(obj_dir)/%.o, $(src_files))
 
@@ -44,14 +44,15 @@ else
 
 	endif
 
-	src_files := $(shell find $(src_dir) -type f -name '*.cpp')
+	src_files := $(shell find src -type f \( -name "*.c" -o -name "*.cpp" \))
 	dependencies := $(shell find $(src_dir) -type d)
-	obj_files := $(patsubst %.cpp, $(obj_dir)/%.o, $(src_files))
-	endif 
+	obj_files := $(patsubst %.cpp, $(obj_dir)/%.o, $(src_files)) 
+	obj_files := $(patsubst %.c, %.o, $(obj_files)) 
+endif 
 
 endif 
 
-all: scaffold link
+all: scaffold link 
 
 scaffold: 
 ifeq ($(build_platform),windows)
@@ -65,10 +66,16 @@ else
 	@mkdir -p $(dir $(obj_files))
 endif
 
-$(obj_dir)/%.o : %.cpp 
+$(obj_dir)/%.o : %.cpp
 	@echo $<...
 	@$(cc) $< $(compiler_flags) -c  -o $@ $(defines) $(includes) 
+
+$(obj_dir)/%.o : %.c
+	@echo Compiling $<...
+	@$(cc) $< $(compiler_flags) -c -o $@ $(defines) $(includes)
+
 
 link: $(obj_files)
 	@echo Linking 
 	@$(cc) $(compile_flags) $^ -o $(bin_dir)/$(assembly)$(extension) $(includes) $(defines) $(linker_flags) 
+

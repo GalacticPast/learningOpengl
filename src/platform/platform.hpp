@@ -1,9 +1,8 @@
 #include "defines.hpp"
 
-struct platform_context
+struct platform_state
 {
-    void *internal_context;
+    void *internal_state;
 };
 
-void initialize_window(platform_context *plat_context);
-void check_if_correct(platform_context *plat_context);
+bool platform_startup(platform_state *plat_state, std::string application_name, s32 x, s32 y, s32 width, s32 height);
