@@ -40,6 +40,13 @@ typedef struct internal_state
     struct wl_keyboard *wl_keyboard;
     struct wl_mouse    *wl_mouse;
 
+    /* EGL stuff */
+    struct wl_egl_window *egl_window;
+    EGLDisplay            egl_display;
+    EGLConfig             egl_config;
+    EGLContext            egl_context;
+    EGLSurface            egl_surface;
+
     s32 x;
     s32 y;
     s32 width;
@@ -202,8 +209,8 @@ bool platform_startup(platform_state *plat_state, std::string application_name, 
 {
     // INFO("Initializing linux-Wayland platform...");
     plat_state->internal_state = (internal_state *)malloc(sizeof(internal_state));
-    memset(plat_state->internal_state, 0, sizeof(internal_state));
     internal_state *state = (internal_state *)plat_state->internal_state;
+    memset(state, 0, sizeof(internal_state));
 
     state->x = x;
     state->y = y;
@@ -280,27 +287,64 @@ bool init_openGL(platform_state *plat_state)
 {
     internal_state *state = (internal_state *)plat_state->internal_state;
 
-    struct wl_egl_window *egl_window = wl_egl_window_create(state->wl_surface, state->width, state->height);
+    EGLint major;
+    EGLint minor;
+    EGLint num_configs;
 
-    if (egl_window == EGL_NO_SURFACE)
+    EGLint attributes[] = {EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT, EGL_NONE};
+
+    EGLint context_attributes[] = {};
+
+    state->egl_window = wl_egl_window_create(state->wl_surface, state->width, state->height);
+
+    if (state->egl_window == EGL_NO_SURFACE)
     {
         return false;
     }
 
-    EGLint fb_attribs[] = {
+    state->egl_display = eglGetDisplay((EGLNativeDisplayType)state->wl_display);
 
-    };
-
-    EGLint context_attribs[] = {};
-
-    EGLDisplay egl_display = eglGetDisplay(state->wl_display);
-
-    if (egl_display == EGL_NO_DISPLAY)
+    if (state->egl_display == EGL_NO_DISPLAY)
     {
+        ERROR("Couldnt get EGL display.");
         return false;
     }
 
-    return false;
+    if (eglInitialize(state->egl_display, &major, &minor) != EGL_TRUE)
+    {
+        ERROR("Couldn't initialize EGL");
+        return false;
+    }
+
+    if (eglChooseConfig(state->egl_display, attributes, &state->egl_config, 1, &num_configs) != EGL_TRUE)
+    {
+        ERROR("Couldn't find matching EGL config");
+        return false;
+    }
+
+    state->egl_surface =
+        eglCreateWindowSurface(state->egl_display, state->egl_config, (EGLNativeWindowType)state->egl_window, NULL);
+
+    if (state->egl_surface == EGL_NO_SURFACE)
+    {
+        ERROR("Couldn't create EGL surface");
+        return false;
+    }
+
+    state->egl_context = eglCreateContext(state->egl_display, state->egl_config, EGL_NO_CONTEXT, NULL);
+    if (state->egl_context == EGL_NO_CONTEXT)
+    {
+        ERROR("Couldn't create EGL context");
+        return false;
+    }
+
+    if (!eglMakeCurrent(state->egl_display, state->egl_surface, state->egl_surface, state->egl_context))
+    {
+        ERROR("Couldn't make EGL context current");
+        return false;
+    }
+    INFO("EGL initialized");
+    return true;
 }
 
 // u32 translate_keycode(u32 wl_keycode)
@@ -731,5 +775,19 @@ bool init_openGL(platform_state *plat_state)
 
 #endif
 #endif
+
+void platform_log_message(const char *buffer, log_levels level, u32 max_chars)
+{
+    // clang-format off
+    //  https://stackoverflow.com/questions/5412761/using-colors-with-printf
+    //                  FATAL  ERROR   DEBUG  WARN    INFO  TRACE 
+    u32 level_color[] = { 41,   31  ,   32  ,   33   ,  34  ,  37 };
+    
+    // clang-format on 
+    
+    printf("\033[0;%dm %s",level_color[level],buffer);
+    printf("\033[0;37m");
+
+}
 
 #endif
