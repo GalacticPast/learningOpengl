@@ -1,6 +1,5 @@
 #include "defines.hpp"
 #include "platform.hpp"
-#include <GL/gl.h>
 #include <iostream>
 #include <string.h>
 
@@ -14,6 +13,12 @@
 #include <xkbcommon/xkbcommon.h>
 
 #include "wayland/xdg-shell-client-protocol.h"
+// opengl
+#include <wayland-egl.h>
+
+#include <EGL/egl.h>
+
+#include <GLES2/gl2.h>
 
 /* Wayland code */
 typedef struct internal_state
@@ -34,6 +39,11 @@ typedef struct internal_state
     /* input */
     struct wl_keyboard *wl_keyboard;
     struct wl_mouse    *wl_mouse;
+
+    s32 x;
+    s32 y;
+    s32 width;
+    s32 height;
 
 } internal_state;
 
@@ -119,6 +129,10 @@ static void xdg_toplevel_configure(void *data, struct xdg_toplevel *xdg_toplevel
     {
         return;
     }
+    internal_state *state = (internal_state *)data;
+    state->width = width;
+    state->height = height;
+
     // event_context context = {};
     // context.data.u32[0] = width;
     // context.data.u32[1] = height;
@@ -188,7 +202,13 @@ bool platform_startup(platform_state *plat_state, std::string application_name, 
 {
     // INFO("Initializing linux-Wayland platform...");
     plat_state->internal_state = (internal_state *)malloc(sizeof(internal_state));
+    memset(plat_state->internal_state, 0, sizeof(internal_state));
     internal_state *state = (internal_state *)plat_state->internal_state;
+
+    state->x = x;
+    state->y = y;
+    state->width = width;
+    state->height = height;
 
     state->wl_display = wl_display_connect(NULL);
     if (!state->wl_display)
@@ -254,6 +274,33 @@ void platform_shutdown(platform_state *plat_state)
     xdg_surface_destroy(state->xdg_surface);
     wl_surface_destroy(state->wl_surface);
     wl_display_disconnect(state->wl_display);
+}
+
+bool init_openGL(platform_state *plat_state)
+{
+    internal_state *state = (internal_state *)plat_state->internal_state;
+
+    struct wl_egl_window *egl_window = wl_egl_window_create(state->wl_surface, state->width, state->height);
+
+    if (egl_window == EGL_NO_SURFACE)
+    {
+        return false;
+    }
+
+    EGLint fb_attribs[] = {
+
+    };
+
+    EGLint context_attribs[] = {};
+
+    EGLDisplay egl_display = eglGetDisplay(state->wl_display);
+
+    if (egl_display == EGL_NO_DISPLAY)
+    {
+        return false;
+    }
+
+    return false;
 }
 
 // u32 translate_keycode(u32 wl_keycode)

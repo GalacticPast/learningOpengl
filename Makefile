@@ -31,8 +31,8 @@ else
 	extension := 
 	defines := -D_DEBUG -DPLATFORM_LINUX_WAYLAND
 	includes := -Isrc 
-	linker_flags := -lwayland-client
-	compiler_flags := -Wall -Wextra -g3 -Wconversion -Wdouble-promotion -Wno-unused-parameter -Wno-unused-function -Wno-sign-conversion -fsanitize=undefined -fsanitize-trap
+	linker_flags := -lwayland-client -lwayland-egl -lEGL -lGLESv2
+	compiler_flags := -Wall -Wextra -g -Wconversion -Wdouble-promotion -Wno-unused-parameter -Wno-unused-function -Wno-sign-conversion -fsanitize=undefined -fsanitize-trap 
 
 	else ifeq ($(linux_platform),x11)		
 	assembly := learningOpengl
@@ -44,10 +44,11 @@ else
 
 	endif
 
-	src_files := $(shell find src -type f \( -name "*.c" -o -name "*.cpp" \))
+	src_files_c := $(shell find src -type f -name '*.c')
+	src_files_cpp := $(shell find src -type f -name '*.cpp')
 	dependencies := $(shell find $(src_dir) -type d)
-	obj_files := $(patsubst %.cpp, $(obj_dir)/%.o, $(src_files)) 
-	obj_files := $(patsubst %.c, %.o, $(obj_files)) 
+	obj_files_cpp := $(patsubst %.cpp, $(obj_dir)/%.o, $(src_files_cpp)) 
+	obj_files_c := $(patsubst %.c, $(obj_dir)/%.o, $(src_files_c)) 
 endif 
 
 endif 
@@ -63,7 +64,8 @@ ifeq ($(build_platform),windows)
 else
 	@mkdir -p $(bin_dir)
 	@mkdir -p $(obj_dir)
-	@mkdir -p $(dir $(obj_files))
+	@mkdir -p $(dir $(obj_files_c))
+	@mkdir -p $(dir $(obj_files_cpp))
 endif
 
 $(obj_dir)/%.o : %.cpp
@@ -72,10 +74,9 @@ $(obj_dir)/%.o : %.cpp
 
 $(obj_dir)/%.o : %.c
 	@echo Compiling $<...
-	@$(cc) $< $(compiler_flags) -c -o $@ $(defines) $(includes)
+	@clang $< $(compiler_flags) -c -o $@ $(defines) $(includes)
 
 
-link: $(obj_files)
+link: $(obj_files_c) $(obj_files_cpp)
 	@echo Linking 
-	@$(cc) $(compile_flags) $^ -o $(bin_dir)/$(assembly)$(extension) $(includes) $(defines) $(linker_flags) 
-
+	@$(cc) $(compiler_flags) $^ -o $(bin_dir)/$(assembly)$(extension) $(includes) $(defines) $(linker_flags) 
