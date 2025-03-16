@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <string>
+#include <vector>
 
 typedef int8_t  s8;
 typedef int16_t s16;

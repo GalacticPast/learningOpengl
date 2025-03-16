@@ -1,5 +1,9 @@
 #include "defines.hpp"
 #include "platform.hpp"
+
+#include "core/event.hpp"
+#include "core/input.hpp"
+
 #include <iostream>
 #include <string.h>
 
@@ -54,33 +58,39 @@ typedef struct internal_state
 
 } internal_state;
 
-// u32 translate_keycode(u32 key);
+keys translate_keycode(u32 key);
 // extern "C" inline void xdg_toplevel_set_title(struct xdg_toplevel, const char *application_name);
 // extern "C" inline void xdg_toplevel_set_app_id(struct xdg_toplevel, const char *application_name);
 
 static void wl_keyboard_keymap(void *data, struct wl_keyboard *wl_keyboard, u32 format, s32 fd, u32 size)
 {
-    // struct internal_state *state = data;
 }
 
 static void wl_keyboard_enter(void *data, struct wl_keyboard *wl_keyboard, u32 serial, struct wl_surface *surface,
                               struct wl_array *keys)
 {
-    //    DEBUG("Keyboard in scope");
+    DEBUG("Keyboard in scope");
 }
 
 static void wl_keyboard_key(void *data, struct wl_keyboard *wl_keyboard, u32 serial, u32 time, u32 key, u32 state)
 {
-    // struct internal_state *internal_state = data;
 
-    //    keys code = translate_keycode(key);
+    keys code = translate_keycode(key);
 
-    //   input_process_key(code, (b8)state);
+    if (code == KEY_ESCAPE)
+    {
+        std::cout << "Apllication exit code recieved." << std::endl;
+
+        event_context context = {};
+        event_fire(EVENT_CODE_APPLICATION_QUIT, nullptr, context);
+    }
+
+    input_process_key(code, (bool)state);
 }
 
 static void wl_keyboard_leave(void *data, struct wl_keyboard *wl_keyboard, u32 serial, struct wl_surface *surface)
 {
-    //  DEBUG("Mouse not in scope");
+    DEBUG("Mouse not in scope");
 }
 
 static void wl_keyboard_modifiers(void *data, struct wl_keyboard *wl_keyboard, u32 serial, u32 mods_depressed,
@@ -294,6 +304,10 @@ void platform_shutdown(platform_state *plat_state)
 {
     internal_state *state = (internal_state *)plat_state->internal_state;
 
+    eglDestroySurface(state->egl_display, state->egl_surface);
+    eglDestroyContext(state->egl_display, state->egl_context);
+    wl_egl_window_destroy(state->egl_window);
+
     xdg_toplevel_destroy(state->xdg_toplevel);
     xdg_surface_destroy(state->xdg_surface);
     wl_surface_destroy(state->wl_surface);
@@ -375,434 +389,455 @@ void draw(platform_state *plat_state)
     eglSwapBuffers(state->egl_display, state->egl_surface);
 }
 
-// u32 translate_keycode(u32 wl_keycode)
-//{
-//     switch (wl_keycode)
-//     {
-//         case 1: {
-//             return KEY_ESCAPE;
-//         }
-//         break;
-//         case 2: {
-//             return MAX_KEYS;
-//             // return KEY_NUMPAD1;
-//         }
-//         break;
-//         case 3: {
-//             return MAX_KEYS;
-//             // return KEY_NUMPAD2;
-//         }
-//         break;
-//         case 4: {
-//             return MAX_KEYS;
-//             // return KEY_NUMPAD3;
-//         }
-//         break;
-//         case 5: {
-//             return MAX_KEYS;
-//             // return KEY_NUMPAD4;
-//         }
-//         break;
-//         case 6: {
-//             return MAX_KEYS;
-//             // return KEY_NUMPAD5;
-//         }
-//         break;
-//         case 7: {
-//             return MAX_KEYS;
-//             // return KEY_NUMPAD6;
-//         }
-//         break;
-//         case 8: {
-//             return MAX_KEYS;
-//             // return KEY_NUMPAD7;
-//         }
-//         break;
-//         case 9: {
-//             return MAX_KEYS;
-//             // return KEY_NUMPAD8;
-//         }
-//         break;
-//         case 10: {
-//             return MAX_KEYS;
-//             // return KEY_NUMPAD9;
-//         }
-//         break;
-//         case 11: {
-//             return MAX_KEYS;
-//             // return KEY_NUMPADMAX_KEYS;
-//         }
-//         break;
-//         case 12: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 13: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 14: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 15: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 16: {
-//             return KEY_Q;
-//         }
-//         break;
-//         case 17: {
-//             return KEY_W;
-//         }
-//         break;
-//         case 18: {
-//             return KEY_E;
-//         }
-//         break;
-//         case 19: {
-//             return KEY_R;
-//         }
-//         break;
-//         case 20: {
-//             return KEY_T;
-//         }
-//         break;
-//         case 21: {
-//             return KEY_Y;
-//         }
-//         break;
-//         case 22: {
-//             return KEY_U;
-//         }
-//         break;
-//         case 23: {
-//             return KEY_I;
-//         }
-//         break;
-//         case 24: {
-//             return KEY_O;
-//         }
-//         break;
-//         case 25: {
-//             return KEY_P;
-//         }
-//         break;
-//         case 26: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 27: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 28: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 29: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 30: {
-//             return KEY_A;
-//         }
-//         break;
-//         case 31: {
-//             return KEY_S;
-//         }
-//         break;
-//         case 32: {
-//             return KEY_D;
-//         }
-//         break;
-//         case 33: {
-//             return KEY_F;
-//         }
-//         break;
-//         case 34: {
-//             return KEY_G;
-//         }
-//         break;
-//         case 35: {
-//             return KEY_H;
-//         }
-//         break;
-//         case 36: {
-//             return KEY_J;
-//         }
-//         break;
-//         case 37: {
-//             return KEY_K;
-//         }
-//         break;
-//         case 38: {
-//             return KEY_L;
-//         }
-//         break;
-//         case 39: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 40: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 41: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 42: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 43: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 44: {
-//             return KEY_Z;
-//         }
-//         break;
-//         case 45: {
-//             return KEY_X;
-//         }
-//         break;
-//         case 46: {
-//             return KEY_C;
-//         }
-//         break;
-//         case 47: {
-//             return KEY_V;
-//         }
-//         break;
-//         case 48: {
-//             return KEY_B;
-//         }
-//         break;
-//         case 49: {
-//             return KEY_N;
-//         }
-//         break;
-//         case 50: {
-//             return KEY_M;
-//         }
-//         break;
-//         case 51: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 52: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 53: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 54: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 55: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 56: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 57: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 58: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 59: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 60: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 61: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 62: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 63: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 64: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 65: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 66: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 67: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 68: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 69: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 70: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 71: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 72: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 73: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 74: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 75: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 76: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 77: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 78: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 79: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 80: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 81: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 82: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 83: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 84: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 85: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 86: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 87: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 88: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 89: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 90: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 91: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 92: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 93: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 94: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 95: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 96: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 97: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 98: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 99: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 100: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 101: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//         case 102: {
-//             return MAX_KEYS;
-//         }
-//         break;
-//     }
-//     return MAX_KEYS;
-// }
+keys translate_keycode(u32 wl_keycode)
+{
+    switch (wl_keycode)
+    {
+        case 1: {
+            return KEY_ESCAPE;
+        }
+        break;
+        case 2: {
+            return KEYS_MAX_KEYS;
+            // return KEY_NUMPAD1;
+        }
+        break;
+        case 3: {
+            return KEYS_MAX_KEYS;
+            // return KEY_NUMPAD2;
+        }
+        break;
+        case 4: {
+            return KEYS_MAX_KEYS;
+            // return KEY_NUMPAD3;
+        }
+        break;
+        case 5: {
+            return KEYS_MAX_KEYS;
+            // return KEY_NUMPAD4;
+        }
+        break;
+        case 6: {
+            return KEYS_MAX_KEYS;
+            // return KEY_NUMPAD5;
+        }
+        break;
+        case 7: {
+            return KEYS_MAX_KEYS;
+            // return KEY_NUMPAD6;
+        }
+        break;
+        case 8: {
+            return KEYS_MAX_KEYS;
+            // return KEY_NUMPAD7;
+        }
+        break;
+        case 9: {
+            return KEYS_MAX_KEYS;
+            // return KEY_NUMPAD8;
+        }
+        break;
+        case 10: {
+            return KEYS_MAX_KEYS;
+            // return KEY_NUMPAD9;
+        }
+        break;
+        case 11: {
+            return KEYS_MAX_KEYS;
+            // return KEY_NUMPADMAX_KEYS;
+        }
+        break;
+        case 12: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 13: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 14: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 15: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 16: {
+            return KEY_Q;
+        }
+        break;
+        case 17: {
+            return KEY_W;
+        }
+        break;
+        case 18: {
+            return KEY_E;
+        }
+        break;
+        case 19: {
+            return KEY_R;
+        }
+        break;
+        case 20: {
+            return KEY_T;
+        }
+        break;
+        case 21: {
+            return KEY_Y;
+        }
+        break;
+        case 22: {
+            return KEY_U;
+        }
+        break;
+        case 23: {
+            return KEY_I;
+        }
+        break;
+        case 24: {
+            return KEY_O;
+        }
+        break;
+        case 25: {
+            return KEY_P;
+        }
+        break;
+        case 26: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 27: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 28: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 29: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 30: {
+            return KEY_A;
+        }
+        break;
+        case 31: {
+            return KEY_S;
+        }
+        break;
+        case 32: {
+            return KEY_D;
+        }
+        break;
+        case 33: {
+            return KEY_F;
+        }
+        break;
+        case 34: {
+            return KEY_G;
+        }
+        break;
+        case 35: {
+            return KEY_H;
+        }
+        break;
+        case 36: {
+            return KEY_J;
+        }
+        break;
+        case 37: {
+            return KEY_K;
+        }
+        break;
+        case 38: {
+            return KEY_L;
+        }
+        break;
+        case 39: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 40: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 41: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 42: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 43: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 44: {
+            return KEY_Z;
+        }
+        break;
+        case 45: {
+            return KEY_X;
+        }
+        break;
+        case 46: {
+            return KEY_C;
+        }
+        break;
+        case 47: {
+            return KEY_V;
+        }
+        break;
+        case 48: {
+            return KEY_B;
+        }
+        break;
+        case 49: {
+            return KEY_N;
+        }
+        break;
+        case 50: {
+            return KEY_M;
+        }
+        break;
+        case 51: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 52: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 53: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 54: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 55: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 56: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 57: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 58: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 59: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 60: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 61: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 62: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 63: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 64: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 65: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 66: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 67: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 68: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 69: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 70: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 71: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 72: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 73: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 74: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 75: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 76: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 77: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 78: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 79: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 80: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 81: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 82: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 83: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 84: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 85: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 86: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 87: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 88: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 89: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 90: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 91: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 92: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 93: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 94: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 95: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 96: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 97: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 98: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 99: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 100: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 101: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+        case 102: {
+            return KEYS_MAX_KEYS;
+        }
+        break;
+    }
+    return KEYS_MAX_KEYS;
+}
 
 #endif
 #endif
+
+void *platform_allocate(u64 size, bool aligned)
+{
+    return malloc(size);
+}
+void platform_free(void *block, bool aligned)
+{
+    free(block);
+}
+void *platform_zero_memory(void *block, u64 size)
+{
+    return memset(block, 0, size);
+}
+void *platform_copy_memory(void *dest, const void *source, u64 size)
+{
+    return memcpy(dest, source, size);
+}
+void *platform_set_memory(void *dest, s32 value, u64 size)
+{
+    return memset(dest, value, size);
+}
 
 void platform_log_message(const char *buffer, log_levels level, u32 max_chars)
 {
