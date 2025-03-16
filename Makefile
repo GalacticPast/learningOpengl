@@ -31,7 +31,7 @@ else
 	extension := 
 	defines := -D_DEBUG -DPLATFORM_LINUX_WAYLAND
 	includes := -Isrc 
-	linker_flags := -lwayland-client -lwayland-egl -lEGL -lGLESv2
+	linker_flags := -lwayland-egl -lwayland-client -lEGL -lGL 
 	compiler_flags := -Wall -Wextra -g -Wconversion -Wdouble-promotion -Wno-unused-parameter -Wno-unused-function -Wno-sign-conversion -fsanitize=undefined -fsanitize-trap 
 
 	else ifeq ($(linux_platform),x11)		

@@ -18,4 +18,12 @@ int main(void)
     }
 
     result = init_openGL(&plat_state);
+
+    while (true)
+    {
+        if (platform_pump_messages(&plat_state))
+        {
+            draw(&plat_state);
+        }
+    }
 }

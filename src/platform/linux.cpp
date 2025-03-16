@@ -149,7 +149,19 @@ static void xdg_toplevel_configure(void *data, struct xdg_toplevel *xdg_toplevel
 static void xdg_toplevel_close(void *data, struct xdg_toplevel *xdg_toplevel)
 {
 }
-struct xdg_toplevel_listener xdg_toplevel_listener = {.configure = xdg_toplevel_configure, .close = xdg_toplevel_close};
+
+static void toplevel_configure_bounds(void *data, struct xdg_toplevel *xdg_toplevel, int32_t width, int32_t height)
+{
+}
+
+static void toplevel_wm_capabilites(void *data, struct xdg_toplevel *xdg_toplevel, struct wl_array *capabilities)
+{
+}
+
+struct xdg_toplevel_listener xdg_toplevel_listener = {.configure = xdg_toplevel_configure,
+                                                      .close = xdg_toplevel_close,
+                                                      .configure_bounds = toplevel_configure_bounds,
+                                                      .wm_capabilities = toplevel_wm_capabilites};
 //
 
 static void xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, u32 serial)
@@ -179,18 +191,21 @@ static void registry_global(void *data, struct wl_registry *wl_registry, u32 nam
 {
     internal_state *state = (internal_state *)data;
 
-    if (strcmp(interface, wl_compositor_interface.name))
+    // std::cout << interface << " " << version << std::endl;
+
+    if (!strcmp(interface, wl_compositor_interface.name))
     {
-        state->wl_compositor = (struct wl_compositor *)wl_registry_bind(wl_registry, name, &wl_compositor_interface, 4);
+        state->wl_compositor =
+            (struct wl_compositor *)wl_registry_bind(wl_registry, name, &wl_compositor_interface, version);
     }
-    else if (strcmp(interface, xdg_wm_base_interface.name))
+    else if (!strcmp(interface, xdg_wm_base_interface.name))
     {
-        state->xdg_wm_base = (struct xdg_wm_base *)wl_registry_bind(wl_registry, name, &xdg_wm_base_interface, 1);
+        state->xdg_wm_base = (struct xdg_wm_base *)wl_registry_bind(wl_registry, name, &xdg_wm_base_interface, version);
         xdg_wm_base_add_listener(state->xdg_wm_base, &xdg_wm_base_listener, state);
     }
-    else if (strcmp(interface, wl_seat_interface.name))
+    else if (!strcmp(interface, wl_seat_interface.name))
     {
-        state->wl_seat = (struct wl_seat *)wl_registry_bind(wl_registry, name, &wl_seat_interface, 1);
+        state->wl_seat = (struct wl_seat *)wl_registry_bind(wl_registry, name, &wl_seat_interface, version);
         wl_seat_add_listener(state->wl_seat, &wl_seat_listener, state);
     }
 }
@@ -207,7 +222,8 @@ static const struct wl_registry_listener wl_registry_listener = {
 
 bool platform_startup(platform_state *plat_state, std::string application_name, s32 x, s32 y, s32 width, s32 height)
 {
-    // INFO("Initializing linux-Wayland platform...");
+    INFO("Initializing linux-Wayland platform...");
+
     plat_state->internal_state = (internal_state *)malloc(sizeof(internal_state));
     internal_state *state = (internal_state *)plat_state->internal_state;
     memset(state, 0, sizeof(internal_state));
@@ -252,6 +268,7 @@ bool platform_startup(platform_state *plat_state, std::string application_name, 
     {
         return false;
     }
+
     xdg_toplevel_add_listener(state->xdg_toplevel, &xdg_toplevel_listener, state);
 
     xdg_toplevel_set_title(state->xdg_toplevel, application_name.c_str());
@@ -259,7 +276,7 @@ bool platform_startup(platform_state *plat_state, std::string application_name, 
 
     wl_surface_commit(state->wl_surface);
 
-    // INFO("Linux-Wayland platform initialized");
+    INFO("Linux-Wayland platform initialized");
 
     return true;
 }
@@ -287,8 +304,8 @@ bool init_openGL(platform_state *plat_state)
 {
     internal_state *state = (internal_state *)plat_state->internal_state;
 
-    EGLint major;
-    EGLint minor;
+    EGLint major = 2;
+    EGLint minor = 0;
     EGLint num_configs;
 
     EGLint attributes[] = {EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT, EGL_NONE};
@@ -343,8 +360,19 @@ bool init_openGL(platform_state *plat_state)
         ERROR("Couldn't make EGL context current");
         return false;
     }
+
     INFO("EGL initialized");
     return true;
+}
+
+void draw(platform_state *plat_state)
+{
+    internal_state *state = (internal_state *)plat_state->internal_state;
+
+    glClearColor(0.0 / 255, 79.0 / 255, 158.0 / 255, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    eglSwapBuffers(state->egl_display, state->egl_surface);
 }
 
 // u32 translate_keycode(u32 wl_keycode)
