@@ -1,3 +1,4 @@
+#pragma once
 #include "core/logger.hpp"
 #include "defines.hpp"
 
@@ -23,4 +24,4 @@ void *platform_copy_memory(void *dest, const void *source, u64 size);
 void *platform_set_memory(void *dest, s32 value, u64 size);
 
 // chage it later
-void draw(platform_state *plat_state);
+void platform_swap_buffers(platform_state *plat_state);

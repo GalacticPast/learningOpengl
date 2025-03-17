@@ -379,12 +379,9 @@ bool init_openGL(platform_state *plat_state)
     return true;
 }
 
-void draw(platform_state *plat_state)
+void platform_swap_buffers(platform_state *plat_state)
 {
     internal_state *state = (internal_state *)plat_state->internal_state;
-
-    glClearColor(0.0 / 255, 79.0 / 255, 158.0 / 255, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
 
     eglSwapBuffers(state->egl_display, state->egl_surface);
 }
