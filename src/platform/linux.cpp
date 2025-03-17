@@ -8,10 +8,8 @@
 #include <string.h>
 
 #ifdef LINUX
+
 #ifdef PLATFORM_LINUX_WAYLAND
-
-#if PLATFORM_LINUX_WAYLAND
-
 //
 #include <wayland-client.h>
 #include <xkbcommon/xkbcommon.h>
@@ -850,4 +848,3 @@ void platform_log_message(const char *buffer, log_levels level, u32 max_chars)
 
 }
 
-#endif

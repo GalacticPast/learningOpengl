@@ -1,26 +1,21 @@
-#include "core/event.hpp"
-#include "platform/platform.hpp"
-
-#include "opengl/opengl_context.hpp"
-#include "opengl/shaders.hpp"
-
-#include <EGL/egl.h>
-#include <GL/gl.h>
-
-#include <GLES2/gl2.h>
 #include <iostream>
 
+#include "core/event.hpp"
+#include "opengl/opengl_context.hpp"
+#include "opengl/shaders.hpp"
+#include "platform/platform.hpp"
+
 static bool is_running;
-bool        shutdown(u16 code, void *sender, void *listener_inst, event_context data);
+bool shutdown(u16 code, void *sender, void *listener_inst, event_context data);
 
 int main(void)
 {
     platform_state plat_state = {};
-    std::string    application_name = "learnOpengl";
-    s32            x = 0;
-    s32            y = 0;
-    s32            width = 1270;
-    s32            height = 800;
+    std::string application_name = "learnOpengl";
+    s32 x = 0;
+    s32 y = 0;
+    s32 width = 1270;
+    s32 height = 800;
     is_running = true;
 
     /* opengl */
@@ -37,31 +32,36 @@ int main(void)
     }
     result = init_openGL(&plat_state);
 
-    typedef void (*GL_VIEW_PORT)(GLint x, GLint y, GLsizei width, GLsizei height);
-    GL_VIEW_PORT glViewPort = (GL_VIEW_PORT)eglGetProcAddress("glViewPort");
-
     glViewPort(x, y, width, height);
 
     opengl_create_shaders(&opengl_context);
 
     // vertex data and attributes;
-    f32 vertices[] = {
-        -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f, 0.0f, 0.5f, 0.0f,
+    // clang-format off
+    f32 vertices[] = 
+    {
+        -0.5f, -0.5f, 0.0f, // left
+        0.0f,0.5f,0.0f, //up
+        0.5f,-0.5f,0.0f, // right
+        -0.5f/2, 0.0f,0.0f,
+        0.5f/2, 0.0f, 0.0f,
+        0.0f,-0.5f,0.0f
     };
 
-    u32 indices[] = {0, 1, 3, 1, 2, 3};
+    u32 indices[] = 
+    {
+        0,3,5,
+        5,4,2,
+        3,1,4
+    };
+    // clang-format on
 
     u32 VBO, VAO, EBO;
 
-    typedef void (*GL_GEN_VERTEX_ARRAYS)(GLsizei n, GLuint *arrays);
-    GL_GEN_VERTEX_ARRAYS glGenVertexArrays = (GL_GEN_VERTEX_ARRAYS)eglGetProcAddress("glGenBuffers");
-
     glGenVertexArrays(1, &VAO);
+
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
-
-    typedef void (*GL_BIND_VERTEX_ARRAYS)(GLuint arrays);
-    GL_BIND_VERTEX_ARRAYS glBindVertexArray = (GL_BIND_VERTEX_ARRAYS)eglGetProcAddress("glBindVertexArrays");
 
     glBindVertexArray(VAO);
 
@@ -87,14 +87,11 @@ int main(void)
 
             glUseProgram(opengl_context.shader_program);
             glBindVertexArray(VAO);
-            glDrawArrays(GL_TRIANGLES, 0, 3);
+            glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
 
             platform_swap_buffers(&plat_state);
         }
     }
-
-    typedef void (*GL_DELETE_VERTEX_ARRAYS)(GLsizei n, GLuint *arrays);
-    GL_DELETE_VERTEX_ARRAYS glDeleteVertexArrays = (GL_DELETE_VERTEX_ARRAYS)eglGetProcAddress("glDeleteVertexArrays");
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);

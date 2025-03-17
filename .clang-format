@@ -1,4 +1,7 @@
 BasedOnStyle: Microsoft
-AlignConsecutiveDeclarations: true
-AllowAllParametersOfDeclarationOnNextLine: false
-IndentCaseLabels: true
+BreakBeforeBraces: Allman
+ColumnLimit: 220 
+AllowShortFunctionsOnASingleLine: false
+AllowShortBlocksOnASingleLine: false
+BreakConstructorInitializers: BeforeComma
+AlignAfterOpenBracket: Align
