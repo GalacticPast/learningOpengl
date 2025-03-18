@@ -1,4 +1,7 @@
 #include "platform.hpp"
+#include <fstream>
+#include <sstream>
+#include <streambuf>
 #include <string.h>
 
 void *platform_allocate(u64 size, bool aligned)
@@ -34,4 +37,30 @@ void platform_log_message(const char *buffer, log_levels level, u32 max_chars)
     printf("\033[0;%dm %s",level_color[level],buffer);
     printf("\033[0;37m");
 
+}
+
+void platform_get_shaders(std::string *vertex_shader_source, std::string *fragment_shader_source)
+{
+    std::string vertex_path = "../src/opengl/shaders/vert.glsl";
+    std::string frag_path = "../src/opengl/shaders/frag.glsl";
+
+    std::ifstream vert(vertex_path);
+    std::ifstream frag(frag_path);
+    
+    if(!vert.is_open() && !frag.is_open())
+    {
+        FATAL("Failed to open vert and frag shaders.");
+    }
+    
+    std::ostringstream vert_stream;
+    vert_stream << vert.rdbuf(); 
+    *vertex_shader_source = vert_stream.str();
+
+    vert.close();
+
+    std::ostringstream frag_stream;
+    frag_stream << frag.rdbuf(); 
+    *fragment_shader_source = frag_stream.str();
+
+    frag.close();
 }
