@@ -10,7 +10,7 @@ void log_message(log_levels level, const char *msg, ...)
     const char *log_level_strings[6] = {"[FATAL]: ", "[ERROR]: ", "[DEBUG]: ", "[WARN]:  ", "[INFO]:  ", "[TRACE]: "};
 
     const u32 max_chars = 4096;
-    char      buffer[max_chars];
+    char buffer[max_chars];
     memset(buffer, 0, max_chars);
 
     va_list arg_ptr;

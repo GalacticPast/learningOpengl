@@ -3,10 +3,6 @@
 #include "core/logger.hpp"
 #include "defines.hpp"
 
-#include <EGL/egl.h>
-#include <GL/gl.h>
-#include <GLES2/gl2.h>
-
 const char *vertex_shader_source = "#version 330 core\n"
                                    "layout (location = 0) in vec3 aPos;\n"
                                    "void main()\n"
@@ -29,7 +25,7 @@ void opengl_create_shaders(opengl_context *opengl_context)
     glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
     glCompileShader(vertex_shader);
 
-    s32  success;
+    s32 success;
     char info_log[512];
 
     glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);

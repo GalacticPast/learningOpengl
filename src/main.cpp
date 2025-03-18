@@ -1,16 +1,15 @@
-#include <iostream>
-
 #include "core/event.hpp"
+#include "core/logger.hpp"
 #include "opengl/opengl_context.hpp"
 #include "opengl/shaders.hpp"
-#include "platform/platform.hpp"
+#include <iostream>
 
 static bool is_running;
-bool shutdown(u16 code, void *sender, void *listener_inst, event_context data);
+void processInput(GLFWwindow *window);
+void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 
 int main(void)
 {
-    platform_state plat_state = {};
     std::string application_name = "learnOpengl";
     s32 x = 0;
     s32 y = 0;
@@ -22,17 +21,27 @@ int main(void)
     opengl_context opengl_context = {};
 
     event_initialize();
-    event_register(EVENT_CODE_APPLICATION_QUIT, NULL, shutdown);
 
-    bool result = platform_startup(&plat_state, application_name, x, y, width, height);
-    if (result == false)
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    GLFWwindow *window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
+    if (window == NULL)
     {
-        ERROR("Platform startup It didnt work lol!!");
-        return 1;
+        std::cout << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        return -1;
     }
-    result = init_openGL(&plat_state);
+    glfwMakeContextCurrent(window);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    glViewPort(x, y, width, height);
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::cout << "Failed to initialize GLAD" << std::endl;
+        return -1;
+    }
 
     opengl_create_shaders(&opengl_context);
 
@@ -78,31 +87,54 @@ int main(void)
 
     glBindVertexArray(0);
 
-    while (is_running)
+    // render loop
+    // -----------
+    while (!glfwWindowShouldClose(window))
     {
-        if (platform_pump_messages(&plat_state))
-        {
-            glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
+        processInput(window);
 
-            glUseProgram(opengl_context.shader_program);
-            glBindVertexArray(VAO);
-            glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
 
-            platform_swap_buffers(&plat_state);
-        }
+        glUseProgram(opengl_context.shader_program);
+        glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
     }
+
+    // glfw: terminate, clearing all previously allocated GLFW resources.
+    // ------------------------------------------------------------------
+    glfwTerminate();
+    return 0;
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
     glDeleteProgram(opengl_context.shader_program);
 
-    platform_shutdown(&plat_state);
     event_shutdown();
 }
 bool shutdown(u16 code, void *sender, void *listener_inst, event_context data)
 {
     is_running = false;
     return true;
+}
+
+// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
+// ---------------------------------------------------------------------------------------------------------
+void processInput(GLFWwindow *window)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+}
+
+// glfw: whenever the window size changed (by OS or user resize) this callback function executes
+// ---------------------------------------------------------------------------------------------
+void framebuffer_size_callback(GLFWwindow *window, int width, int height)
+{
+    // make sure the viewport matches the new window dimensions; note that width and
+    // height will be significantly larger than specified on retina displays.
+    glViewport(0, 0, width, height);
 }

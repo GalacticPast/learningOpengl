@@ -31,7 +31,7 @@ else
 	extension := 
 	defines := -D_DEBUG -DPLATFORM_LINUX_WAYLAND
 	includes := -Isrc 
-	linker_flags := -lwayland-egl -lwayland-client -lEGL -lGL 
+	linker_flags := -lglfw3 -lwayland-egl -lwayland-client -lGL 
 	compiler_flags := -Wall -Wextra -g -Wconversion -Wdouble-promotion -Wno-unused-parameter -Wno-unused-function -Wno-sign-conversion -fsanitize=undefined -fsanitize-trap 
 
 	else ifeq ($(linux_platform),x11)		
@@ -39,7 +39,7 @@ else
 	extension := 
 	defines := -D_DEBUG -DPLATFORM_LINUX_X11 
 	includes := -Isrc 
-	linker_flags := -lX11 -lxcb -lX11-xcb -L/usr/X11R6/lib -lm
+	linker_flags := -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl 
 	compiler_flags := -Wall -Wextra -g3 -Wconversion -Wdouble-promotion -Wno-unused-parameter -Wno-unused-function -Wno-sign-conversion -fsanitize=undefined -fsanitize-trap
 
 	endif
@@ -73,7 +73,7 @@ $(obj_dir)/%.o : %.cpp
 	@$(cc) $< $(compiler_flags) -c  -o $@ $(defines) $(includes) 
 
 $(obj_dir)/%.o : %.c
-	@echo Compiling $<...
+	@echo $<...
 	@clang $< $(compiler_flags) -c -o $@ $(defines) $(includes)
 
 

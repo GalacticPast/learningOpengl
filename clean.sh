@@ -8,6 +8,10 @@ if [[ -d "bin" ]]; then
     rm -rf -v bin
 fi
 
+if [[ -d "src/platform/wayland" ]]; then 
+    rm -rf -v src/platform/wayland
+fi
+
 ERROELEVEL=$?
 if [[ $ERRORLEVEL -ne 0 ]]; then
 echo "Error:"$ERRORLEVEL && exit
