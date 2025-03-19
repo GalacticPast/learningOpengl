@@ -39,28 +39,26 @@ void platform_log_message(const char *buffer, log_levels level, u32 max_chars)
 
 }
 
-void platform_get_shaders(std::string *vertex_shader_source, std::string *fragment_shader_source)
+void platform_load_file(const char* filepath, std::string* str)
 {
-    std::string vertex_path = "../src/opengl/shaders/vert.glsl";
-    std::string frag_path = "../src/opengl/shaders/frag.glsl";
-
-    std::ifstream vert(vertex_path);
-    std::ifstream frag(frag_path);
+    std::ifstream file(filepath);
     
-    if(!vert.is_open() && !frag.is_open())
+    if(!file.is_open())
     {
-        FATAL("Failed to open vert and frag shaders.");
+        FATAL("Failed to open file.");
     }
     
-    std::ostringstream vert_stream;
-    vert_stream << vert.rdbuf(); 
-    *vertex_shader_source = vert_stream.str();
+    std::ostringstream file_stream;
+    file_stream << file.rdbuf(); 
+    *str = file_stream.str();
+    file.close();
+}
 
-    vert.close();
-
-    std::ostringstream frag_stream;
-    frag_stream << frag.rdbuf(); 
-    *fragment_shader_source = frag_stream.str();
-
-    frag.close();
+void platform_get_shaders(std::string *vertex_shader_source, std::string *fragment_shader_source)
+{
+    char vertex_path[] = "../src/opengl/shaders/vert.glsl";
+    char frag_path[] = "../src/opengl/shaders/frag.glsl";
+    
+    platform_load_file(vertex_path, vertex_shader_source);
+    platform_load_file(frag_path, fragment_shader_source);
 }
