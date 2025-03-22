@@ -27,8 +27,8 @@ else
 	assembly := learningOpengl
 	extension := 
 	defines := -D_DEBUG -DPLATFORM_LINUX_WAYLAND
-	includes := -Isrc 
-	linker_flags := -lxcb -lEGL 
+	includes := -Isrc -Isrc/opengl
+	linker_flags := -lX11 -lxcb -lX11-xcb 
 	compiler_flags := -Wall -Wextra -g -Wconversion -Wdouble-promotion -Wno-unused-parameter -Wno-unused-function -Wno-sign-conversion -fsanitize=undefined -fsanitize-trap 
 
 	src_files_c := $(shell find src -type f -name '*.c')

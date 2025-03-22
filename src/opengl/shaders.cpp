@@ -3,10 +3,6 @@
 #include "core/logger.hpp"
 #include "defines.hpp"
 
-#include <EGL/egl.h>
-#include <GL/gl.h>
-#include <GLES2/gl2.h>
-
 const char *vertex_shader_source = "#version 330 core\n"
                                    "layout (location = 0) in vec3 aPos;\n"
                                    "void main()\n"

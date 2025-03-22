@@ -3,6 +3,7 @@
 
 #include "core/event.hpp"
 #include "core/input.hpp"
+//
 
 #include <string.h>
 
@@ -14,10 +15,8 @@
 #define EGL_EGLEXT_PROTOTYPES
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include <GL/glcorearb.h>
-#include <xcb/xcb.h>
 
-#include <glad/glad.h>
+#include "opengl/opengl_context.hpp"
 
 typedef struct internal_state
 {
@@ -35,25 +34,20 @@ typedef struct internal_state
 
 } internal_state;
 
-PFNEGLGETPLATFORMDISPLAYEXTPROC GetPlatformDisplayEXT;
 // Key translation
 keys translate_keycode(u32 wl_keycode);
 
-bool platform_startup(platform_state *plat_state, const char *application_name, s32 x, s32 y, s32 width, s32 height)
+bool platform_startup(platform_state *plat_state, std::string application_name, s32 x, s32 y, s32 width, s32 height)
 {
     // Create the internal state.
     plat_state->internal_state = malloc(sizeof(internal_state));
     internal_state *state = (internal_state *)plat_state->internal_state;
 
-    // Connect to X
     state->display = XOpenDisplay(NULL);
 
-    // Turn off key repeats.
     XAutoRepeatOff(state->display);
 
-    // Retrieve the connection from the display.
     state->connection = XGetXCBConnection(state->display);
-
     if (xcb_connection_has_error(state->connection))
     {
         FATAL("Failed to connect to X server via XCB.");
@@ -106,7 +100,7 @@ bool platform_startup(platform_state *plat_state, const char *application_name, 
     // Change the title
     xcb_change_property(state->connection, XCB_PROP_MODE_REPLACE, state->window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING,
                         8, // data should be viewed 8 bits at a time
-                        strlen(application_name), application_name);
+                        application_name.length(), application_name.c_str());
 
     // Tell the server to notify when the window manager
     // attempts to destroy the window.
@@ -139,15 +133,17 @@ bool init_openGL(platform_state *plat_state)
 {
     internal_state *state = (internal_state *)plat_state->internal_state;
 
-    GetPlatformDisplayEXT = (PFNEGLGETPLATFORMDISPLAYEXTPROC)eglGetProcAddress("eglGetPlatformDisplayEXT");
-    state->egl_display =
-        GetPlatformDisplayEXT(EGL_PLATFORM_XCB_EXT, state->connection,
-                              (const EGLint[]){
-                                  EGL_PLATFORM_XCB_SCREEN_EXT,
-                                  0, // This is a screenp that you can get from 2nd argument of xcb_connect
-                                  EGL_NONE,
-                              });
-    if (state->egl_display != EGL_NO_DISPLAY)
+    s32 egl_version = gladLoaderLoadEGL(NULL);
+    if (!egl_version)
+    {
+        FATAL("Unable to load EGL.");
+        return false;
+    }
+
+    DEBUG("Loaded egl_version %d.%d", GLAD_VERSION_MAJOR(egl_version), GLAD_VERSION_MINOR(egl_version));
+
+    state->egl_display = eglGetDisplay((EGLNativeDisplayType)state->display);
+    if (state->egl_display == EGL_NO_DISPLAY)
     {
         FATAL("Failed to get EGL display");
         return false;
@@ -166,14 +162,16 @@ bool init_openGL(platform_state *plat_state)
         return false;
     }
 
-    EGLBoolean bind_opengl_api = eglBindAPI(EGL_OPENGL_API);
-    if (bind_opengl_api)
+    bool load_egl = gladLoaderLoadEGL(state->egl_display);
+
+    if (!load_egl)
     {
-        ERROR("Failed to select opengl API for EGL");
+        FATAL("Unable to load EGL.");
         return false;
     }
+    DEBUG("Loaded egl_version %d.%d after reload.", GLAD_VERSION_MAJOR(egl_version), GLAD_VERSION_MINOR(egl_version));
 
-    EGLint attributes[] = {
+    EGLint config_attributes[] = {
         EGL_SURFACE_TYPE,
         EGL_WINDOW_BIT,
         EGL_CONFORMANT,
@@ -197,43 +195,41 @@ bool init_openGL(platform_state *plat_state)
         EGL_NONE,
     };
 
-    EGLint egl_count;
-    if (!eglChooseConfig(state->egl_display, attributes, &state->egl_config, 1, &egl_count) || egl_count != 1)
+    EGLint egl_config_count;
+    if (!eglChooseConfig(state->egl_display, config_attributes, &state->egl_config, 1, &egl_config_count))
     {
-        FATAL("Cannot choose egl config.");
+        FATAL("Cannot choose egl config. ERROR: %d", eglGetError());
         return false;
     }
 
-    EGLint attr[] = {
-        EGL_GL_COLORSPACE, EGL_GL_COLORSPACE_LINEAR, // or use EGL_GL_COLORSPACE_SRGB for sRGB framebuffer
-        EGL_RENDER_BUFFER, EGL_BACK_BUFFER,          EGL_NONE,
+    if (egl_config_count != 1)
+    {
+        ERROR("Got more than one config %d", egl_config_count);
+        return false;
+    }
+
+    EGLint surface_attributes[] = {
+        EGL_RENDER_BUFFER,
+        EGL_BACK_BUFFER,
+        EGL_NONE,
     };
 
-    state->egl_surface = (EGLSurface *)eglCreateWindowSurface(state->display, state->egl_config, state->window, attr);
+    state->egl_surface =
+        (EGLSurface *)eglCreateWindowSurface(state->egl_display, state->egl_config, state->window, surface_attributes);
 
     if (state->egl_surface == EGL_NO_SURFACE)
     {
-        FATAL("Cannot create EGL surface");
+        FATAL("Cannot create EGL surface. ERROR: %D", eglGetError());
         return false;
     }
 
-    EGLint context_attributes[] = {
-        EGL_CONTEXT_MAJOR_VERSION,
-        4,
-        EGL_CONTEXT_MINOR_VERSION,
-        5,
-        EGL_CONTEXT_OPENGL_PROFILE_MASK,
-        EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT,
-        EGL_CONTEXT_OPENGL_DEBUG,
-        EGL_TRUE,
-        EGL_NONE,
-    };
+    EGLint context_attributes[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
 
     state->egl_context =
         (EGLContext *)eglCreateContext(state->egl_display, state->egl_config, EGL_NO_CONTEXT, context_attributes);
     if (state->egl_context == EGL_NO_CONTEXT)
     {
-        FATAL("Cannot create EGL context, OpenGL 4.5 not supported?");
+        FATAL("Cannot create EGL context, OpenGL 4.5 not supported? ERROR:%d", eglGetError());
         return false;
     }
 
@@ -246,11 +242,23 @@ bool init_openGL(platform_state *plat_state)
         return false;
     }
 
-    if (!gladLoadGLLoader((GLADloadproc)eglGetProcAddress))
+    s32 gles_version = gladLoaderLoadGLES2();
+
+    if (!gles_version)
     {
-        FATAL("Failed to initialize GLAD");
+        FATAL("Unable to load GLES");
         return false;
     }
+    DEBUG("Loaded GLES %d.%d", GLAD_VERSION_MAJOR(gles_version), GLAD_VERSION_MINOR(gles_version));
+
+    INFO("Opengl initialization sucessful.");
+    return true;
+}
+
+void platform_swap_buffers(platform_state *plat_state)
+{
+    internal_state *state = (internal_state *)plat_state->internal_state;
+    eglSwapBuffers(state->egl_display, state->egl_surface);
 }
 
 void platform_shutdown(platform_state *plat_state)
@@ -269,95 +277,33 @@ bool platform_pump_messages(platform_state *plat_state)
     // Simply cold-cast to the known type.
     internal_state *state = (internal_state *)plat_state->internal_state;
 
-    xcb_generic_event_t        *event;
-    xcb_client_message_event_t *cm;
+    xcb_generic_event_t *event = xcb_wait_for_event(state->connection);
 
-    bool quit_flagged = false;
-
-    // Poll for events until null is returned.
-    while (event != 0)
+    switch (event->response_type & ~0x80)
     {
-        event = xcb_poll_for_event(state->connection);
-        if (event == 0)
-        {
-            break;
+        case XCB_EXPOSE: {
         }
+        break;
+        case XCB_KEY_PRESS:
+        case XCB_KEY_RELEASE: {
 
-        // Input events
-        switch (event->response_type & ~0x80)
-        {
-            case XCB_KEY_PRESS:
-            case XCB_KEY_RELEASE: {
-                // Key press event - xcb_key_press_event_t and xcb_key_release_event_t are the same
-                xcb_key_press_event_t *kb_event = (xcb_key_press_event_t *)event;
-                bool                   pressed = event->response_type == XCB_KEY_PRESS;
-                xcb_keycode_t          code = kb_event->detail;
-                KeySym                 key_sym = XkbKeycodeToKeysym(state->display,
-                                                                    (KeyCode)code, // event.xkey.keycode,
-                                                                    0, code & ShiftMask ? 1 : 0);
+            bool state = (event->response_type & ~0x80) == XCB_KEY_PRESS ? 1 : 0;
 
-                keys key = translate_keycode(key_sym);
+            xcb_key_press_event_t *key_event = (xcb_key_press_event_t *)event;
 
-                // Pass to the input subsystem for processing.
-                input_process_key(key, pressed);
+            keys key = translate_keycode(key_event->detail);
+
+            if (key == KEY_ESCAPE)
+            {
+                event_context context = {};
+                event_fire(EVENT_CODE_APPLICATION_QUIT, NULL, context);
             }
-            break;
-            case XCB_BUTTON_PRESS:
-            case XCB_BUTTON_RELEASE: {
-                xcb_button_press_event_t *mouse_event = (xcb_button_press_event_t *)event;
-                bool                      pressed = event->response_type == XCB_BUTTON_PRESS;
-                buttons                   mouse_button = BUTTON_MAX_BUTTONS;
-                switch (mouse_event->detail)
-                {
-                    case XCB_BUTTON_INDEX_1:
-                        mouse_button = BUTTON_LEFT;
-                        break;
-                    case XCB_BUTTON_INDEX_2:
-                        mouse_button = BUTTON_MIDDLE;
-                        break;
-                    case XCB_BUTTON_INDEX_3:
-                        mouse_button = BUTTON_RIGHT;
-                        break;
-                }
-
-                // Pass over to the input subsystem.
-                if (mouse_button != BUTTON_MAX_BUTTONS)
-                {
-                    input_process_button(mouse_button, pressed);
-                }
-            }
-            break;
-            case XCB_MOTION_NOTIFY: {
-                // Mouse move
-                xcb_motion_notify_event_t *move_event = (xcb_motion_notify_event_t *)event;
-
-                // Pass over to the input subsystem.
-                input_process_mouse_move(move_event->event_x, move_event->event_y);
-            }
-            break;
-            case XCB_CONFIGURE_NOTIFY: {
-                // TODO: Resizing
-            }
-            break;
-
-            case XCB_CLIENT_MESSAGE: {
-                cm = (xcb_client_message_event_t *)event;
-
-                // Window close
-                if (cm->data.data32[0] == state->wm_delete_win)
-                {
-                    quit_flagged = true;
-                }
-            }
-            break;
-            default:
-                // Something else
-                break;
+            input_process_key(key, state);
         }
-
-        free(event);
+        break;
     }
-    return !quit_flagged;
+    free(event);
+    return true;
 }
 
 // Key translation
@@ -653,7 +599,7 @@ void *platform_set_memory(void *dest, s32 value, u64 size)
 void platform_log_message(const char *buffer, log_levels level, u32 max_chars)
 {
     // clang-format off
-    //  https://stackoverflow.com/questions/5412761/using-colors-with-printf
+    //  https://stackoverflow.com/questions/5412761/using-colors-with-FATAL
     //                  FATAL  ERROR   DEBUG  WARN    INFO  TRACE 
     u32 level_color[] = { 41,   31  ,   32  ,   33   ,  34  ,  37 };
     

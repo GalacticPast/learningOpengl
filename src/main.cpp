@@ -4,8 +4,6 @@
 #include "opengl/opengl_context.hpp"
 #include "opengl/shaders.hpp"
 
-#include "glad/glad.h"
-
 static bool is_running;
 bool        shutdown(u16 code, void *sender, void *listener_inst, event_context data);
 
