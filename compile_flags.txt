@@ -1,3 +1,4 @@
 -Isrc
+-Isrc/opengl/
 -D_DEBUG
 -DPLATFORM_LINUX_X11

@@ -2,7 +2,18 @@
 #include "core/logger.hpp"
 #include "defines.hpp"
 
+struct platform_context
+{
+    void *internal_state;
+};
+
+bool platform_startup(platform_context *plat_state, std::string application_name, s32 x, s32 y, s32 width, s32 height);
+void platform_shutdown(platform_context *plat_state);
+
 void platform_log_message(const char *buffer, log_levels level, u32 max_chars);
+
+bool init_openGL(platform_context *plat_state);
+void platform_swap_buffers(platform_context *plat_state);
 
 // memory
 void *platform_allocate(u64 size, bool aligned);

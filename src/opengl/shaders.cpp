@@ -2,6 +2,7 @@
 #include "core/asserts.hpp"
 #include "core/logger.hpp"
 #include "defines.hpp"
+
 #include "platform/platform.hpp"
 
 void opengl_create_shaders(opengl_context *opengl_context)

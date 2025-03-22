@@ -3,6 +3,8 @@
 #include "opengl/opengl_context.hpp"
 #include "opengl/shaders.hpp"
 
+#include "platform/platform.hpp"
+
 /* math lib */
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -12,8 +14,7 @@
 #include "stb_image.h"
 
 static bool is_running;
-void processInput(GLFWwindow *window);
-void framebuffer_size_callback(GLFWwindow *window, int width, int height);
+bool shutdown(u16 code, void *sender, void *listener_inst, event_context data);
 
 int main(void)
 {
@@ -25,28 +26,24 @@ int main(void)
     is_running = true;
 
     /* opengl */
+    platform_context plat_state = {};
     opengl_context opengl_context = {};
 
     event_initialize();
+    event_register(EVENT_CODE_APPLICATION_QUIT, NULL, shutdown);
 
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    GLFWwindow *window = glfwCreateWindow(win_width, win_height, "LearnOpenGL", NULL, NULL);
-    if (window == NULL)
+    bool result = platform_startup(&plat_state, application_name, x, y, win_width, win_height);
+    if (!result)
     {
-        FATAL("Failed to create GLFW window");
-        glfwTerminate();
+        FATAL("Failed to startup platform");
+        return 1;
     }
 
-    glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    result = init_openGL(&plat_state);
+    if (!result)
     {
-        FATAL("Failed to initialize GLAD");
+        ERROR("opengl startup didnt work lol!!");
+        return 1;
     }
 
     opengl_create_shaders(&opengl_context);
@@ -192,9 +189,8 @@ int main(void)
 
     // render loop
     // -----------
-    while (!glfwWindowShouldClose(window))
+    while (is_running)
     {
-        processInput(window);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -232,32 +228,19 @@ int main(void)
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        platform_swap_buffers(&plat_state);
     }
-
-    glfwTerminate();
-    return 0;
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteProgram(opengl_context.shader_program);
 
+    platform_shutdown(&plat_state);
     event_shutdown();
 }
+
 bool shutdown(u16 code, void *sender, void *listener_inst, event_context data)
 {
     is_running = false;
     return true;
-}
-
-void processInput(GLFWwindow *window)
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-}
-
-void framebuffer_size_callback(GLFWwindow *window, int width, int height)
-{
-    glViewport(0, 0, width, height);
 }
