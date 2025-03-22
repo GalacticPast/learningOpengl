@@ -4,11 +4,7 @@
 #include "opengl/opengl_context.hpp"
 #include "opengl/shaders.hpp"
 
-#include <EGL/egl.h>
-#include <GL/gl.h>
-
-#include <GLES2/gl2.h>
-#include <iostream>
+#include "glad/glad.h"
 
 static bool is_running;
 bool        shutdown(u16 code, void *sender, void *listener_inst, event_context data);
@@ -35,12 +31,8 @@ int main(void)
         ERROR("Platform startup It didnt work lol!!");
         return 1;
     }
+
     result = init_openGL(&plat_state);
-
-    typedef void (*GL_VIEW_PORT)(GLint x, GLint y, GLsizei width, GLsizei height);
-    GL_VIEW_PORT glViewPort = (GL_VIEW_PORT)eglGetProcAddress("glViewPort");
-
-    glViewPort(x, y, width, height);
 
     opengl_create_shaders(&opengl_context);
 
@@ -53,15 +45,9 @@ int main(void)
 
     u32 VBO, VAO, EBO;
 
-    typedef void (*GL_GEN_VERTEX_ARRAYS)(GLsizei n, GLuint *arrays);
-    GL_GEN_VERTEX_ARRAYS glGenVertexArrays = (GL_GEN_VERTEX_ARRAYS)eglGetProcAddress("glGenBuffers");
-
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
-
-    typedef void (*GL_BIND_VERTEX_ARRAYS)(GLuint arrays);
-    GL_BIND_VERTEX_ARRAYS glBindVertexArray = (GL_BIND_VERTEX_ARRAYS)eglGetProcAddress("glBindVertexArrays");
 
     glBindVertexArray(VAO);
 
@@ -92,9 +78,6 @@ int main(void)
             platform_swap_buffers(&plat_state);
         }
     }
-
-    typedef void (*GL_DELETE_VERTEX_ARRAYS)(GLsizei n, GLuint *arrays);
-    GL_DELETE_VERTEX_ARRAYS glDeleteVertexArrays = (GL_DELETE_VERTEX_ARRAYS)eglGetProcAddress("glDeleteVertexArrays");
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);

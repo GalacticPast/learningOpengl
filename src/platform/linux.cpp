@@ -20,9 +20,10 @@
 // opengl
 #include <wayland-egl.h>
 
+#include "glad/glad.h"
 #include <EGL/egl.h>
-
-#include <GLES2/gl2.h>
+#include <EGL/eglext.h>
+#include <GL/glcorearb.h>
 
 /* Wayland code */
 typedef struct internal_state
@@ -318,8 +319,8 @@ bool init_openGL(platform_state *plat_state)
 {
     internal_state *state = (internal_state *)plat_state->internal_state;
 
-    EGLint major = 2;
-    EGLint minor = 0;
+    EGLint major;
+    EGLint minor;
     EGLint num_configs;
 
     EGLint attributes[] = {EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT, EGL_NONE};
@@ -344,6 +345,12 @@ bool init_openGL(platform_state *plat_state)
     if (eglInitialize(state->egl_display, &major, &minor) != EGL_TRUE)
     {
         ERROR("Couldn't initialize EGL");
+        return false;
+    }
+
+    if (major < 1 || (major == 1 && minor < 5))
+    {
+        FATAL("EGL version 1.5 or higher required");
         return false;
     }
 
@@ -373,6 +380,12 @@ bool init_openGL(platform_state *plat_state)
     {
         ERROR("Couldn't make EGL context current");
         return false;
+    }
+
+    if (!gladLoadGLLoader((GLADloadproc)eglGetProcAddress))
+    {
+        FATAL("Failed to initialize GLAD");
+        return 0;
     }
 
     INFO("EGL initialized");
