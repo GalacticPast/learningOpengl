@@ -26,13 +26,18 @@ int main(void)
     event_register(EVENT_CODE_APPLICATION_QUIT, NULL, shutdown);
 
     bool result = platform_startup(&plat_state, application_name, x, y, width, height);
-    if (result == false)
+    if (!result)
     {
         ERROR("Platform startup It didnt work lol!!");
         return 1;
     }
 
     result = init_openGL(&plat_state);
+    if (!result)
+    {
+        ERROR("opengl startup didnt work lol!!");
+        return 1;
+    }
 
     opengl_create_shaders(&opengl_context);
 

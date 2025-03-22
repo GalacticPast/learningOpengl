@@ -24,25 +24,12 @@ else
 
 	ifeq ($(is_linux),Linux)
 
-	linux_platform := $(shell echo "$$XDG_SESSION_TYPE")
-
-	ifeq ($(linux_platform),wayland)		
 	assembly := learningOpengl
 	extension := 
 	defines := -D_DEBUG -DPLATFORM_LINUX_WAYLAND
 	includes := -Isrc 
-	linker_flags := -lwayland-client -lwayland-egl -lxcb -lEGL -lGL
+	linker_flags := -lxcb -lEGL 
 	compiler_flags := -Wall -Wextra -g -Wconversion -Wdouble-promotion -Wno-unused-parameter -Wno-unused-function -Wno-sign-conversion -fsanitize=undefined -fsanitize-trap 
-
-	else ifeq ($(linux_platform),x11)		
-	assembly := learningOpengl
-	extension := 
-	defines := -D_DEBUG -DPLATFORM_LINUX_X11 
-	includes := -Isrc 
-	linker_flags := -lX11 -lxcb -lX11-xcb -L/usr/X11R6/lib -lm
-	compiler_flags := -Wall -Wextra -g3 -Wconversion -Wdouble-promotion -Wno-unused-parameter -Wno-unused-function -Wno-sign-conversion -fsanitize=undefined -fsanitize-trap
-
-	endif
 
 	src_files_c := $(shell find src -type f -name '*.c')
 	src_files_cpp := $(shell find src -type f -name '*.cpp')
