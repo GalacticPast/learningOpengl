@@ -267,40 +267,118 @@ void platform_shutdown(platform_context *plat_state)
     xcb_destroy_window(state->connection, state->window);
 }
 
+void platform_set_viewport(u16 width, u16 height)
+{
+    glViewport(0, 0, width, height);
+}
+
 bool platform_pump_messages(platform_context *plat_state)
 {
     // Simply cold-cast to the known type.
+    // Simply cold-cast to the known type.
     internal_state *state = (internal_state *)plat_state->internal_state;
 
-    xcb_generic_event_t *event = xcb_wait_for_event(state->connection);
+    xcb_generic_event_t *event;
+    xcb_client_message_event_t *cm;
 
-    switch (event->response_type & ~0x80)
+    bool quit_flagged = false;
+
+    // Poll for events until null is returned.
+    while (event != 0)
     {
-    case XCB_EXPOSE:
-    {
-    }
-    break;
-    case XCB_KEY_PRESS:
-    case XCB_KEY_RELEASE:
-    {
-
-        bool state = (event->response_type & ~0x80) == XCB_KEY_PRESS ? 1 : 0;
-
-        xcb_key_press_event_t *key_event = (xcb_key_press_event_t *)event;
-
-        keys key = translate_keycode(key_event->detail);
-
-        if (key == KEY_ESCAPE)
+        event = xcb_poll_for_event(state->connection);
+        if (event == 0)
         {
-            event_context context = {};
-            event_fire(EVENT_CODE_APPLICATION_QUIT, NULL, context);
+            break;
         }
-        input_process_key(key, state);
+
+        // Input events
+        switch (event->response_type & ~0x80)
+        {
+        case XCB_KEY_PRESS:
+        case XCB_KEY_RELEASE:
+        {
+            // Key press event - xcb_key_press_event_t and xcb_key_release_event_t are the same
+            xcb_key_press_event_t *kb_event = (xcb_key_press_event_t *)event;
+            bool pressed = event->response_type == XCB_KEY_PRESS;
+            xcb_keycode_t code = kb_event->detail;
+            KeySym key_sym = XkbKeycodeToKeysym(state->display,
+                                                (KeyCode)code, // event.xkey.keycode,
+                                                0, code & ShiftMask ? 1 : 0);
+
+            keys key = translate_keycode(key_sym);
+
+            // Pass to the input subsystem for processing.
+            input_process_key(key, pressed);
+        }
+        break;
+        case XCB_BUTTON_PRESS:
+        case XCB_BUTTON_RELEASE:
+        {
+            xcb_button_press_event_t *mouse_event = (xcb_button_press_event_t *)event;
+            bool pressed = event->response_type == XCB_BUTTON_PRESS;
+            buttons mouse_button = BUTTON_MAX_BUTTONS;
+            switch (mouse_event->detail)
+            {
+            case XCB_BUTTON_INDEX_1:
+                mouse_button = BUTTON_LEFT;
+                break;
+            case XCB_BUTTON_INDEX_2:
+                mouse_button = BUTTON_MIDDLE;
+                break;
+            case XCB_BUTTON_INDEX_3:
+                mouse_button = BUTTON_RIGHT;
+                break;
+            }
+
+            // Pass over to the input subsystem.
+            if (mouse_button != BUTTON_MAX_BUTTONS)
+            {
+                input_process_button(mouse_button, pressed);
+            }
+        }
+        break;
+        case XCB_MOTION_NOTIFY:
+        {
+            // Mouse move
+            xcb_motion_notify_event_t *move_event = (xcb_motion_notify_event_t *)event;
+
+            // Pass over to the input subsystem.
+            input_process_mouse_move(move_event->event_x, move_event->event_y);
+        }
+        break;
+        case XCB_CONFIGURE_NOTIFY:
+        {
+            xcb_configure_notify_event_t *configure_event = (xcb_configure_notify_event_t *)event;
+
+            event_context context = {};
+
+            context.data.u16[0] = configure_event->width;
+            context.data.u16[1] = configure_event->height;
+
+            event_fire(EVENT_CODE_RESIZED, 0, context);
+        }
+        break;
+
+        case XCB_CLIENT_MESSAGE:
+        {
+            cm = (xcb_client_message_event_t *)event;
+
+            // Window close
+            if (cm->data.data32[0] == state->wm_delete_win)
+            {
+                quit_flagged = true;
+            }
+        }
+        break;
+        default:
+            // Something else
+            break;
+        }
+
+        free(event);
     }
-    break;
-    }
-    free(event);
-    return true;
+    return !quit_flagged;
 }
 
 // Key translation

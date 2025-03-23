@@ -15,6 +15,7 @@
 
 static bool is_running;
 bool shutdown(u16 code, void *sender, void *listener_inst, event_context data);
+bool window_resize(u16 code, void *sender, void *listener_inst, event_context data);
 
 int main(void)
 {
@@ -31,6 +32,7 @@ int main(void)
 
     event_initialize();
     event_register(EVENT_CODE_APPLICATION_QUIT, NULL, shutdown);
+    event_register(EVENT_CODE_RESIZED, NULL, window_resize);
 
     bool result = platform_startup(&plat_state, application_name, x, y, win_width, win_height);
     if (!result)
@@ -228,6 +230,7 @@ int main(void)
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
+        platform_pump_messages(&plat_state);
         platform_swap_buffers(&plat_state);
     }
 
@@ -242,5 +245,11 @@ int main(void)
 bool shutdown(u16 code, void *sender, void *listener_inst, event_context data)
 {
     is_running = false;
+    return true;
+}
+bool window_resize(u16 code, void *sender, void *listener_inst, event_context data)
+{
+    DEBUG("Window resize msg recieved, new dimensions %d    %d", data.data.u16[0], data.data.u16[1]);
+    platform_set_viewport((u32)data.data.u16[0], (u32)data.data.u16[1]);
     return true;
 }

@@ -12,19 +12,19 @@ typedef struct mouse_state
 {
     s16 x;
     s16 y;
-    u8  buttons[BUTTON_MAX_BUTTONS];
+    u8 buttons[BUTTON_MAX_BUTTONS];
 } mouse_state;
 
 typedef struct input_state
 {
     keyboard_state keyboard_current;
     keyboard_state keyboard_previous;
-    mouse_state    mouse_current;
-    mouse_state    mouse_previous;
+    mouse_state mouse_current;
+    mouse_state mouse_previous;
 } input_state;
 
 // Internal input state
-static bool        initialized = false;
+static bool initialized = false;
 static input_state state = {};
 
 void input_initialize()
@@ -63,6 +63,12 @@ void input_process_key(keys key, bool pressed)
         // Fire off an event for immediate processing.
         event_context context;
         context.data.u16[0] = key;
+
+        if (key == KEY_ESCAPE)
+        {
+            event_fire(EVENT_CODE_APPLICATION_QUIT, 0, context);
+        }
+
         event_fire(pressed ? EVENT_CODE_KEY_PRESSED : EVENT_CODE_KEY_RELEASED, 0, context);
     }
 }
