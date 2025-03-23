@@ -64,11 +64,6 @@ void input_process_key(keys key, bool pressed)
         event_context context;
         context.data.u16[0] = key;
 
-        if (key == KEY_ESCAPE)
-        {
-            event_fire(EVENT_CODE_APPLICATION_QUIT, 0, context);
-        }
-
         event_fire(pressed ? EVENT_CODE_KEY_PRESSED : EVENT_CODE_KEY_RELEASED, 0, context);
     }
 }
