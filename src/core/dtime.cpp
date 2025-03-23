@@ -17,12 +17,12 @@ f64 get_time_nano()
 f64 get_time_milli()
 {
     std::chrono::steady_clock::time_point end_clock = std::chrono::steady_clock::now();
-    f64 duration = static_cast<f64>(std::chrono::duration_cast<std::chrono::milliseconds>(end_clock - static_clock_state.start_clock).count());
-    return duration;
+    f64 duration = static_cast<f64>(std::chrono::duration_cast<std::chrono::nanoseconds>(end_clock - static_clock_state.start_clock).count());
+    return duration / 1e6;
 }
 f64 get_time_sec()
 {
     std::chrono::steady_clock::time_point end_clock = std::chrono::steady_clock::now();
-    f64 duration = static_cast<f64>(std::chrono::duration_cast<std::chrono::seconds>(end_clock - static_clock_state.start_clock).count());
-    return duration;
+    f64 duration = static_cast<f64>(std::chrono::duration_cast<std::chrono::nanoseconds>(end_clock - static_clock_state.start_clock).count());
+    return duration / 1e9;
 }

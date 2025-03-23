@@ -19,7 +19,6 @@ static bool is_running;
 bool shutdown(u16 code, void *sender, void *listener_inst, event_context data);
 bool window_resize(u16 code, void *sender, void *listener_inst, event_context data);
 bool mouse_move_callback(u16 code, void *sender, void *listener_inst, event_context data);
-bool mouse_wheel_move_callback(u16 code, void *sender, void *listener_inst, event_context data);
 bool button_pressed_callback(u16 code, void *sender, void *listener_inst, event_context data);
 
 bool firstMouse = true;
@@ -53,11 +52,11 @@ int main(void)
 
     clock_initialize(&clock_context);
 
+    input_initialize();
     event_initialize();
     event_register(EVENT_CODE_APPLICATION_QUIT, NULL, shutdown);
     event_register(EVENT_CODE_RESIZED, NULL, window_resize);
     event_register(EVENT_CODE_MOUSE_MOVED, NULL, mouse_move_callback);
-    event_register(EVENT_CODE_MOUSE_WHEEL, NULL, mouse_wheel_move_callback);
     event_register(EVENT_CODE_KEY_PRESSED, NULL, button_pressed_callback);
 
     bool result = platform_startup(&plat_state, application_name, x, y, win_width, win_height);
@@ -220,8 +219,43 @@ int main(void)
     while (is_running)
     {
         platform_pump_messages(&plat_state);
+        input_update(get_time_milli());
 
-        f32 currentFrame = static_cast<f32>(get_time_milli());
+        f32 cameraSpeed = static_cast<float>(2.5 * deltaTime);
+        if (input_is_key_down(KEY_W))
+        {
+            cameraPos += cameraSpeed * cameraFront;
+        }
+        if (input_is_key_down(KEY_S))
+        {
+            cameraPos -= cameraSpeed * cameraFront;
+        }
+        if (input_is_key_down(KEY_A))
+        {
+            cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        }
+        if (input_is_key_down(KEY_D))
+        {
+            cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        }
+        if (input_is_key_down(KEY_Z))
+        {
+            fov -= 1;
+            if (fov < 1.0f)
+            {
+                fov = 1.0f;
+            }
+        }
+        if (input_is_key_down(KEY_X))
+        {
+            fov += 1;
+            if (fov > 45.0f)
+            {
+                fov = 45.0f;
+            }
+        }
+
+        f32 currentFrame = static_cast<f32>(get_time_sec());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
@@ -330,42 +364,5 @@ bool button_pressed_callback(u16 code, void *sender, void *listener_inst, event_
 
     DEBUG("Key Pressed %d.", key);
 
-    f32 cameraSpeed = static_cast<float>(2.5 * deltaTime);
-    if (key == KEY_W)
-    {
-        cameraPos += cameraSpeed * cameraFront;
-    }
-    if (key == KEY_S)
-    {
-        cameraPos -= cameraSpeed * cameraFront;
-    }
-    if (key == KEY_A)
-    {
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-    }
-    if (key == KEY_D)
-    {
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-    }
-    if (key == KEY_Z)
-    {
-        fov -= 1;
-        if (fov < 1.0f)
-        {
-            fov = 1.0f;
-        }
-    }
-    if (key == KEY_X)
-    {
-        fov += 1;
-        if (fov > 45.0f)
-        {
-            fov = 45.0f;
-        }
-    }
-    return true;
-}
-bool mouse_wheel_move_callback(u16 code, void *sender, void *listener_inst, event_context data)
-{
     return true;
 }
