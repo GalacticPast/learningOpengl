@@ -1,3 +1,4 @@
+#include "core/dtime.hpp"
 #include "core/event.hpp"
 #include "core/logger.hpp"
 #include "opengl/opengl_context.hpp"
@@ -29,6 +30,9 @@ int main(void)
     /* opengl */
     platform_context plat_state = {};
     opengl_context opengl_context = {};
+    clock_context clock_context = {};
+
+    clock_initialize(&clock_context);
 
     event_initialize();
     event_register(EVENT_CODE_APPLICATION_QUIT, NULL, shutdown);
@@ -189,6 +193,10 @@ int main(void)
     glUniform1i(glGetUniformLocation(opengl_context.shader_program, "texture_2"), 1);
     glEnable(GL_DEPTH_TEST);
 
+    glm::mat4 projection = glm::mat4(1.0f);
+    projection = glm::perspective(glm::radians(45.0f), (float)win_width / (float)win_height, 0.1f, 100.0f);
+    u32 projection_loc = glGetUniformLocation(opengl_context.shader_program, "projection");
+
     // render loop
     // -----------
     while (is_running)
@@ -204,14 +212,13 @@ int main(void)
 
         glUseProgram(opengl_context.shader_program);
 
-        glm::mat4 view = glm::mat4(1.0f);
-        glm::mat4 projection = glm::mat4(1.0f);
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-        projection = glm::perspective(glm::radians(45.0f), (float)win_width / (float)win_height, 0.1f, 100.0f);
-        //
-        // retrieve the matrix uniform locations
+        const float radius = 10.0f;
+        float camX = sin(get_time() / 1e9) * radius;
+        float camZ = cos(get_time() / 1e9) * radius;
+
+        glm::mat4 view;
+        view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
         u32 view_loc = glGetUniformLocation(opengl_context.shader_program, "view");
-        u32 projection_loc = glGetUniformLocation(opengl_context.shader_program, "projection");
 
         // pass them to the shaders (3 different ways)
         glUniformMatrix4fv(view_loc, 1, GL_FALSE, &view[0][0]);

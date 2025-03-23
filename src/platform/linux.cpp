@@ -685,6 +685,7 @@ void platform_log_message(const char *buffer, log_levels level, u32 max_chars)
 
 }
 
+
 void platform_load_file(const char* filepath, std::string* str)
 {
     std::ifstream file(filepath);
