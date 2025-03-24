@@ -46,7 +46,7 @@ extern "C"
     PFNEGLGETCURRENTDISPLAYPROC glad_eglGetCurrentDisplay = NULL;
     PFNEGLGETCURRENTSURFACEPROC glad_eglGetCurrentSurface = NULL;
     PFNEGLGETDISPLAYPROC glad_eglGetDisplay = NULL;
-    PFNEGLGETDERRORPROC glad_eglGetDERROR = NULL;
+    PFNEGLGETERRORPROC glad_eglGetError = NULL;
     PFNEGLGETPROCADDRESSPROC glad_eglGetProcAddress = NULL;
     PFNEGLINITIALIZEPROC glad_eglInitialize = NULL;
     PFNEGLMAKECURRENTPROC glad_eglMakeCurrent = NULL;
@@ -81,7 +81,7 @@ extern "C"
         glad_eglGetCurrentDisplay = (PFNEGLGETCURRENTDISPLAYPROC)load(userptr, "eglGetCurrentDisplay");
         glad_eglGetCurrentSurface = (PFNEGLGETCURRENTSURFACEPROC)load(userptr, "eglGetCurrentSurface");
         glad_eglGetDisplay = (PFNEGLGETDISPLAYPROC)load(userptr, "eglGetDisplay");
-        glad_eglGetDERROR = (PFNEGLGETDERRORPROC)load(userptr, "eglGetDERROR");
+        glad_eglGetError = (PFNEGLGETERRORPROC)load(userptr, "eglGetError");
         glad_eglGetProcAddress = (PFNEGLGETPROCADDRESSPROC)load(userptr, "eglGetProcAddress");
         glad_eglInitialize = (PFNEGLINITIALIZEPROC)load(userptr, "eglInitialize");
         glad_eglMakeCurrent = (PFNEGLMAKECURRENTPROC)load(userptr, "eglMakeCurrent");
@@ -193,7 +193,7 @@ extern "C"
 #endif
 
         version = eglQueryString(display, EGL_VERSION);
-        (void)eglGetDERROR();
+        (void)eglGetError();
 
         if (version == NULL)
         {
@@ -220,8 +220,8 @@ extern "C"
         eglGetDisplay = (PFNEGLGETDISPLAYPROC)load(userptr, "eglGetDisplay");
         eglGetCurrentDisplay = (PFNEGLGETCURRENTDISPLAYPROC)load(userptr, "eglGetCurrentDisplay");
         eglQueryString = (PFNEGLQUERYSTRINGPROC)load(userptr, "eglQueryString");
-        eglGetDERROR = (PFNEGLGETDERRORPROC)load(userptr, "eglGetDERROR");
-        if (eglGetDisplay == NULL || eglGetCurrentDisplay == NULL || eglQueryString == NULL || eglGetDERROR == NULL)
+        eglGetError = (PFNEGLGETERRORPROC)load(userptr, "eglGetError");
+        if (eglGetDisplay == NULL || eglGetCurrentDisplay == NULL || eglQueryString == NULL || eglGetError == NULL)
             return 0;
 
         version = glad_egl_find_core_egl(display);

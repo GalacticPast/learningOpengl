@@ -1,4 +1,5 @@
 #ifdef PLATFORM_LINUX
+
 #ifndef __eglplatform_h_
 #define __eglplatform_h_
 

@@ -1,4 +1,4 @@
-#ifdef LINUX
+#ifdef PLATFORM_LINUX
 #include "platform.hpp"
 
 #include "core/event.hpp"
@@ -11,10 +11,6 @@
 #include <X11/Xlib-xcb.h> // sudo apt-get install libxkbcommon-x11-dev
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
-
-#define EGL_EGLEXT_PROTOTYPES
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
 
 #include "opengl/opengl_context.hpp"
 
@@ -53,7 +49,7 @@ bool platform_startup(platform_context *plat_state, std::string application_name
     state->connection = XGetXCBConnection(state->display);
     if (xcb_connection_has_error(state->connection))
     {
-        FATAL("Failed to connect to X server via XCB.");
+        DFATAL("Failed to connect to X server via XCB.");
         return false;
     }
 
@@ -122,7 +118,7 @@ bool platform_startup(platform_context *plat_state, std::string application_name
     s32 stream_result = xcb_flush(state->connection);
     if (stream_result <= 0)
     {
-        FATAL("An error occurred when flusing the stream: %d", stream_result);
+        DFATAL("An error occurred when flusing the stream: %d", stream_result);
         return false;
     }
 
@@ -135,7 +131,7 @@ bool init_openGL(platform_context *plat_state)
     s32 egl_version = gladLoaderLoadEGL(NULL);
     if (!egl_version)
     {
-        FATAL("Unable to load EGL.");
+        DFATAL("Unable to load EGL.");
         return false;
     }
 
@@ -144,7 +140,7 @@ bool init_openGL(platform_context *plat_state)
     state->egl_display = eglGetDisplay((EGLNativeDisplayType)state->display);
     if (state->egl_display == EGL_NO_DISPLAY)
     {
-        FATAL("Failed to get EGL display");
+        DFATAL("Failed to get EGL display");
         return false;
     }
 
@@ -152,12 +148,12 @@ bool init_openGL(platform_context *plat_state)
 
     if (!eglInitialize(state->egl_display, &major, &minor))
     {
-        FATAL("Cannot initialize EGL display");
+        DFATAL("Cannot initialize EGL display");
         return false;
     }
     if (major < 1 || (major == 1 && minor < 5))
     {
-        FATAL("EGL version 1.5 or higher required");
+        DFATAL("EGL version 1.5 or higher required");
         return false;
     }
 
@@ -165,7 +161,7 @@ bool init_openGL(platform_context *plat_state)
 
     if (!load_egl)
     {
-        FATAL("Unable to load EGL.");
+        DFATAL("Unable to load EGL.");
         return false;
     }
     DEBUG("Loaded egl_version %d.%d after reload.", GLAD_VERSION_MAJOR(egl_version), GLAD_VERSION_MINOR(egl_version));
@@ -197,7 +193,7 @@ bool init_openGL(platform_context *plat_state)
     EGLint egl_config_count;
     if (!eglChooseConfig(state->egl_display, config_attributes, &state->egl_config, 1, &egl_config_count))
     {
-        FATAL("Cannot choose egl config. error: %d", eglGeterror());
+        DFATAL("Cannot choose egl config. error: %d", eglGetError());
         return false;
     }
 
@@ -217,7 +213,7 @@ bool init_openGL(platform_context *plat_state)
 
     if (state->egl_surface == EGL_NO_SURFACE)
     {
-        FATAL("Cannot create EGL surface. ERROR: %D", eglGeterror());
+        DFATAL("Cannot create EGL surface. ERROR: %D", eglGetError());
         return false;
     }
 
@@ -226,7 +222,7 @@ bool init_openGL(platform_context *plat_state)
     state->egl_context = (EGLContext *)eglCreateContext(state->egl_display, state->egl_config, EGL_NO_CONTEXT, context_attributes);
     if (state->egl_context == EGL_NO_CONTEXT)
     {
-        FATAL("Cannot create EGL context, OpenGL 4.5 not supported? ERROR:%d", eglGetError());
+        DFATAL("Cannot create EGL context, OpenGL 4.5 not supported? ERROR:%d", eglGetError());
         return false;
     }
 
@@ -234,7 +230,7 @@ bool init_openGL(platform_context *plat_state)
 
     if (!egl_make_current)
     {
-        FATAL("Failed to make context current");
+        DFATAL("Failed to make context current");
         return false;
     }
 
@@ -242,12 +238,12 @@ bool init_openGL(platform_context *plat_state)
 
     if (!gles_version)
     {
-        FATAL("Unable to load GLES");
+        DFATAL("Unable to load GLES");
         return false;
     }
     DEBUG("Loaded GLES %d.%d", GLAD_VERSION_MAJOR(gles_version), GLAD_VERSION_MINOR(gles_version));
 
-    INFO("Opengl initialization sucessful.");
+    DINFO("Opengl initialization sucessful.");
     return true;
 }
 
@@ -675,8 +671,8 @@ void *platform_set_memory(void *dest, s32 value, u64 size)
 void platform_log_message(const char *buffer, log_levels level, u32 max_chars)
 {
     // clang-format off
-    //  https://stackoverflow.com/questions/5412761/using-colors-with-FATAL
-    //                  FATAL  ERROR   DEBUG  WARN    INFO  TRACE 
+    //  https://stackoverflow.com/questions/5412761/using-colors-with-DFATAL
+    //                  DFATAL  ERROR   DEBUG  WARN    DINFO  TRACE 
     u32 level_color[] = { 41,   31  ,   32  ,   33   ,  34  ,  37 };
     
     // clang-format on 
@@ -693,7 +689,7 @@ void platform_load_file(const char* filepath, std::string* str)
     
     if(!file.is_open())
     {
-        FATAL("Failed to open file.");
+        DFATAL("Failed to open file.");
     }
     
     std::ostringstream file_stream;
