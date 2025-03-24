@@ -3,7 +3,7 @@
 typedef enum log_levels
 {
     LOG_LEVEL_FATAL,
-    LOG_LEVEL_ERROR,
+    LOG_LEVEL_DERROR,
     LOG_LEVEL_DEBUG,
     LOG_LEVEL_WARN,
     LOG_LEVEL_INFO,
@@ -13,8 +13,8 @@ typedef enum log_levels
 
 void log_message(log_levels level, const char *msg, ...);
 
-#define FATAL(msg, ...) log_message(LOG_LEVEL_FATAL, msg, ##__VA_ARGS__)
-#define ERROR(msg, ...) log_message(LOG_LEVEL_ERROR, msg, ##__VA_ARGS__)
+#define DFATAL(msg, ...) log_message(LOG_LEVEL_FATAL, msg, ##__VA_ARGS__)
+#define DERROR(msg, ...) log_message(LOG_LEVEL_DERROR, msg, ##__VA_ARGS__)
 
 #ifdef _DEBUG
 #define DEBUG(msg, ...) log_message(LOG_LEVEL_DEBUG, msg, ##__VA_ARGS__)
@@ -22,6 +22,6 @@ void log_message(log_levels level, const char *msg, ...);
 #define DEBUG(msg, ...)
 #endif
 
-#define WARN(msg, ...) log_message(LOG_LEVEL_WARN, msg, ##__VA_ARGS__)
-#define INFO(msg, ...) log_message(LOG_LEVEL_INFO, msg, ##__VA_ARGS__)
-#define TRACE(msg, ...) log_message(LOG_LEVEL_TRACE, msg, ##__VA_ARGS__)
+#define DWARN(msg, ...) log_message(LOG_LEVEL_WARN, msg, ##__VA_ARGS__)
+#define DINFO(msg, ...) log_message(LOG_LEVEL_INFO, msg, ##__VA_ARGS__)
+#define DTRACE(msg, ...) log_message(LOG_LEVEL_TRACE, msg, ##__VA_ARGS__)

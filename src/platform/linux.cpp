@@ -1,3 +1,4 @@
+#ifdef LINUX
 #include "platform.hpp"
 
 #include "core/event.hpp"
@@ -196,13 +197,13 @@ bool init_openGL(platform_context *plat_state)
     EGLint egl_config_count;
     if (!eglChooseConfig(state->egl_display, config_attributes, &state->egl_config, 1, &egl_config_count))
     {
-        FATAL("Cannot choose egl config. ERROR: %d", eglGetError());
+        FATAL("Cannot choose egl config. error: %d", eglGeterror());
         return false;
     }
 
     if (egl_config_count != 1)
     {
-        ERROR("Got more than one config %d", egl_config_count);
+        DERROR("Got more than one config %d", egl_config_count);
         return false;
     }
 
@@ -216,7 +217,7 @@ bool init_openGL(platform_context *plat_state)
 
     if (state->egl_surface == EGL_NO_SURFACE)
     {
-        FATAL("Cannot create EGL surface. ERROR: %D", eglGetError());
+        FATAL("Cannot create EGL surface. ERROR: %D", eglGeterror());
         return false;
     }
 
@@ -353,8 +354,8 @@ bool platform_pump_messages(platform_context *plat_state)
 
             event_context context = {};
 
-            context.data.u16[0] = configure_event->width;
-            context.data.u16[1] = configure_event->height;
+            context.data.u32[0] = configure_event->width;
+            context.data.u32[1] = configure_event->height;
 
             event_fire(EVENT_CODE_RESIZED, 0, context);
         }
@@ -709,3 +710,4 @@ void platform_get_shaders(std::string *vertex_shader_source, std::string *fragme
     platform_load_file(vertex_path, vertex_shader_source);
     platform_load_file(frag_path, fragment_shader_source);
 }
+#endif

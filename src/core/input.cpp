@@ -31,7 +31,7 @@ void input_initialize()
 {
     dzero_memory(&state, sizeof(input_state));
     initialized = true;
-    INFO("Input subsystem initialized.");
+    DINFO("Input subsystem initialized.");
 }
 
 void input_shutdown()

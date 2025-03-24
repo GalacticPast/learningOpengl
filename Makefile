@@ -8,15 +8,17 @@ ifeq ($(OS),Windows_NT)
 	assembly := learningOpengl
 	extension := .exe
 	defines := -D_DEBUG -DPLATFORM_WINDOWS
-	includes := -Isrc -I$(vulkan_sdk)\Include
-	linker_flags := -luser32 -lvulkan-1 -L$(vulkan_sdk)\Lib 
-	compiler_flags := -Wall -Wextra -g3 -Wconversion -Wdouble-promotion -Wno-unused-parameter -Wno-unused-function -Wno-sign-conversion -fsanitize=undefined -fsanitize-trap
+	includes := -Isrc -Isrc/opengl/extern/ 
+	linker_flags := -lgdi32 -lwinmm -lopengl32 -lshell32 -luser32 -llibcmtd -L"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.42.34433\lib\x64\" 
+	compiler_flags := -Wall -Wextra -g -Wconversion -Wdouble-promotion -Wno-unused-parameter -Wno-unused-function -Wno-sign-conversion -fsanitize=undefined -fsanitize-trap
 	build_platform := windows
 	
 	rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
-	src_files := $(shell find $(src_dir) -type f -name '*[.cpp,.c]')
-	directories := $(shell dir src /b /a:d)
-	obj_files := $(patsubst %.cpp, $(obj_dir)/%.o, $(src_files))
+	src_files_c := $(call rwildcard,$(src_dir)/,*.c)
+	src_files_cpp := $(call rwildcard,$(src_dir)/,*.cpp)
+	directories := $(shell dir src /b /s /a:d)
+	obj_files_c := $(patsubst %.c, $(obj_dir)/%.o, $(src_files_c))
+	obj_files_cpp := $(patsubst %.cpp, $(obj_dir)/%.o, $(src_files_cpp))
 
 else
 
@@ -26,8 +28,8 @@ else
 
 	assembly := learningOpengl
 	extension := 
-	defines := -D_DEBUG -DPLATFORM_LINUX_WAYLAND
-	includes := -Isrc -Isrc/opengl
+	defines := -D_DEBUG -DPLATFORM_LINUX
+	includes := -Isrc -Isrc/opengl/extern/
 	linker_flags := -lX11 -lxcb -lX11-xcb 
 	compiler_flags := -Wall -Wextra -g -Wconversion -Wdouble-promotion -Wno-unused-parameter -Wno-unused-function -Wno-sign-conversion -fsanitize=undefined -fsanitize-trap 
 
@@ -43,11 +45,12 @@ endif
 all: scaffold link 
 
 scaffold: 
-ifeq ($(build_platform),windows)
+ifeq ($(OS),Windows_NT)
 	@echo scaffolding project structure 
 	-@setlocal enableextensions enabledelayedexpansion && mkdir $(obj_dir) 2>NUL || cd .
+	-@setlocal enableextensions enabledelayedexpansion && mkdir $(bin_dir) 2>NUL || cd .
 	-@setlocal enableextensions enabledelayedexpansion && mkdir $(addsuffix \$(src_dir),$(obj_dir)) 2>NUL || cd .
-	-@setlocal enableextensions enabledelayedexpansion && mkdir $(addprefix $(obj_dir)\$(src_dir)\,$(directories)) 2>NUL || cd .
+	-@setlocal enableextensions enabledelayedexpansion && mkdir $(addprefix $(obj_dir)\$(src_dir)\,$(subst D:\projects\learningOpengl\src\,,$(directories))) 2>NUL || cd .
 else
 	@mkdir -p $(bin_dir)
 	@mkdir -p $(obj_dir)

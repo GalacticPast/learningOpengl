@@ -5,7 +5,7 @@
 
 typedef struct registered_event
 {
-    void        *listener;
+    void *listener;
     PFN_on_event callback;
 } registered_event;
 
@@ -27,7 +27,7 @@ typedef struct event_system_state
 /**
  * Event system internal state.
  */
-static bool               is_initialized = false;
+static bool is_initialized = false;
 static event_system_state state;
 
 bool event_initialize()
@@ -92,7 +92,7 @@ bool event_unregister(u16 code, void *listener, PFN_on_event on_event)
     // On nothing is registered for the code, boot out.
     if (state.registered[code].events.empty())
     {
-        WARN("Nothing registered for the code %h", code);
+        DWARN("Nothing registered for the code %h", code);
         return false;
     }
 

@@ -18,10 +18,6 @@ typedef uint64_t u64;
 typedef float f32;
 typedef double f64;
 
-#ifdef __MING32__
-#define WINDOWS
-#endif
-
 #ifdef __linux__
 #define LINUX
 #endif

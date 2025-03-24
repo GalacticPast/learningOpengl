@@ -29,7 +29,7 @@ void *dallocate(u64 size, memory_tag tag)
 {
     if (tag == MEMORY_TAG_UNKNOWN)
     {
-        WARN("dallocate called using MEMORY_TAG_UNKNOWN. Re-class this allocation.");
+        DWARN("dallocate called using MEMORY_TAG_UNKNOWN. Re-class this allocation.");
     }
 
     stats.total_allocated += size;
@@ -45,7 +45,7 @@ void dfree(void *block, u64 size, memory_tag tag)
 {
     if (tag == MEMORY_TAG_UNKNOWN)
     {
-        WARN("dfree called using MEMORY_TAG_UNKNOWN. Re-class this allocation.");
+        DWARN("dfree called using MEMORY_TAG_UNKNOWN. Re-class this allocation.");
     }
 
     stats.total_allocated -= size;

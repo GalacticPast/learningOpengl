@@ -1,3 +1,4 @@
+#ifdef PLATFORM_LINUX
 /**
  * SPDX-License-Identifier: (WTFPL OR CC0-1.0) AND Apache-2.0
  */
@@ -157,7 +158,7 @@ extern "C"
     PFNGLGETBUFFERPARAMETERIVPROC                glad_glGetBufferParameteriv = NULL;
     PFNGLGETBUFFERPOINTERVPROC                   glad_glGetBufferPointerv = NULL;
     PFNGLGETDEBUGMESSAGELOGPROC                  glad_glGetDebugMessageLog = NULL;
-    PFNGLGETERRORPROC                            glad_glGetError = NULL;
+    PFNGLGETDERRORPROC                            glad_glGetDERROR = NULL;
     PFNGLGETFLOATVPROC                           glad_glGetFloatv = NULL;
     PFNGLGETFRAGDATALOCATIONPROC                 glad_glGetFragDataLocation = NULL;
     PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC glad_glGetFramebufferAttachmentParameteriv = NULL;
@@ -451,7 +452,7 @@ extern "C"
         glad_glGetAttribLocation = (PFNGLGETATTRIBLOCATIONPROC)load(userptr, "glGetAttribLocation");
         glad_glGetBooleanv = (PFNGLGETBOOLEANVPROC)load(userptr, "glGetBooleanv");
         glad_glGetBufferParameteriv = (PFNGLGETBUFFERPARAMETERIVPROC)load(userptr, "glGetBufferParameteriv");
-        glad_glGetError = (PFNGLGETERRORPROC)load(userptr, "glGetError");
+        glad_glGetDERROR = (PFNGLGETDERRORPROC)load(userptr, "glGetDERROR");
         glad_glGetFloatv = (PFNGLGETFLOATVPROC)load(userptr, "glGetFloatv");
         glad_glGetFramebufferAttachmentParameteriv =
             (PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC)load(userptr, "glGetFramebufferAttachmentParameteriv");
@@ -1166,4 +1167,5 @@ extern "C"
 
 #ifdef __cplusplus
 }
+#endif
 #endif

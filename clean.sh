@@ -13,8 +13,8 @@ if [[ -d "src/platform/wayland" ]]; then
 fi
 
 ERROELEVEL=$?
-if [[ $ERRORLEVEL -ne 0 ]]; then
-echo "Error:"$ERRORLEVEL && exit
+if [[ $DERRORLEVEL -ne 0 ]]; then
+echo "DERROR:"$DERRORLEVEL && exit
 fi
 
 if [[ -d "obj" ]]; then 
@@ -22,9 +22,9 @@ if [[ -d "obj" ]]; then
 fi
 
 ERROELEVEL=$?
-if [[ $ERRORLEVEL -ne 0 ]]
+if [[ $DERRORLEVEL -ne 0 ]]
 then
-echo "Error:"$ERRORLEVEL && exit
+echo "DERROR:"$DERRORLEVEL && exit
 fi
 
 echo "All assemblies cleaned successfully."

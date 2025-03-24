@@ -62,14 +62,14 @@ int main(void)
     bool result = platform_startup(&plat_state, application_name, x, y, win_width, win_height);
     if (!result)
     {
-        FATAL("Failed to startup platform");
+        DFATAL("Failed to startup platform");
         return 1;
     }
 
     result = init_openGL(&plat_state);
     if (!result)
     {
-        ERROR("opengl startup didnt work lol!!");
+        DERROR("opengl startup didnt work lol!!");
         return 1;
     }
 
@@ -179,7 +179,7 @@ int main(void)
     }
     else
     {
-        ERROR("Failed to load texture_1");
+        DERROR("Failed to load texture_1");
     }
 
     stbi_image_free(data);
@@ -204,7 +204,7 @@ int main(void)
     }
     else
     {
-        ERROR("Failed to load texture_2");
+        DERROR("Failed to load texture_2");
     }
 
     stbi_image_free(data);
@@ -310,8 +310,8 @@ bool shutdown(u16 code, void *sender, void *listener_inst, event_context data)
 }
 bool window_resize(u16 code, void *sender, void *listener_inst, event_context data)
 {
-    DEBUG("Window resize msg recieved, new dimensions %d    %d", data.data.u16[0], data.data.u16[1]);
-    platform_set_viewport((u32)data.data.u16[0], (u32)data.data.u16[1]);
+    DEBUG("Window resize msg recieved, new dimensions %d    %d", data.data.u32[0], data.data.u32[1]);
+    platform_set_viewport((u32)data.data.u32[0], (u32)data.data.u32[1]);
     return true;
 }
 

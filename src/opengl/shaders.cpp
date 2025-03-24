@@ -7,7 +7,7 @@
 
 void opengl_create_shaders(opengl_context *opengl_context)
 {
-    INFO("Creating vertex and fragment shaders");
+    DINFO("Creating vertex and fragment shaders");
     std::string vertex_shader_source;
     std::string fragment_shader_source;
 
@@ -30,7 +30,7 @@ void opengl_create_shaders(opengl_context *opengl_context)
     {
         glGetShaderInfoLog(vertex_shader, 512, NULL, info_log);
 
-        ERROR("Vertex shader compilation failed. %s", info_log);
+        DERROR("Vertex shader compilation failed. %s", info_log);
         debugBreak();
     }
     DEBUG("Vertex shader compiled succesfully");
@@ -49,7 +49,7 @@ void opengl_create_shaders(opengl_context *opengl_context)
     {
         glGetShaderInfoLog(fragment_shader, 512, NULL, info_log);
 
-        ERROR("Fragment shader compilation failed. %s", info_log);
+        DERROR("Fragment shader compilation failed. %s", info_log);
         debugBreak();
     }
 
@@ -64,12 +64,12 @@ void opengl_create_shaders(opengl_context *opengl_context)
     {
         glGetProgramInfoLog(opengl_context->shader_program, 512, NULL, info_log);
 
-        ERROR("Shader progam linking failed. %s", info_log);
+        DERROR("Shader progam linking failed. %s", info_log);
         debugBreak();
     }
 
     glDeleteShader(vertex_shader);
     glDeleteShader(fragment_shader);
 
-    INFO("Succsefully created vertex and fragment shaders");
+    DINFO("Succsefully created vertex and fragment shaders");
 }
