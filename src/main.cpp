@@ -17,12 +17,13 @@ bool shutdown(u16 code, void *sender, void *listener_inst, event_context data);
 bool window_resize(u16 code, void *sender, void *listener_inst, event_context data);
 bool mouse_move_callback(u16 code, void *sender, void *listener_inst, event_context data);
 bool button_pressed_callback(u16 code, void *sender, void *listener_inst, event_context data);
+void update_game();
 
 bool firstMouse = true;
 f32 yaw = -90.0f; // yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
 f32 pitch = 0.0f;
-f32 lastX = 800.0f / 2.0;
-f32 lastY = 600.0 / 2.0;
+f32 last_x = 800.0f / 2.0;
+f32 last_y = 600.0 / 2.0;
 f32 fov = 45.0f;
 
 // timing
@@ -30,8 +31,8 @@ f32 deltaTime = 0.0f; // time between current frame and last frame
 f32 lastFrame = 0.0f;
 
 vec3 camera_pos = vec3(0.0f, 0.0f, 3.0f);
-vec3 cameraFront = vec3(0.0f, 0.0f, -1.0f);
-vec3 cameraUp = vec3(0.0f, 1.0f, 0.0f);
+vec3 camera_front = vec3(0.0f, 0.0f, -1.0f);
+vec3 camera_up = vec3(0.0f, 1.0f, 0.0f);
 
 int main(void)
 {
@@ -206,40 +207,6 @@ int main(void)
         platform_pump_messages(&plat_state);
         input_update(get_time_milli());
 
-        f32 camera_speed = static_cast<float>(2.5 * deltaTime);
-        if (input_is_key_down(KEY_W))
-        {
-            camera_pos += cameraFront * camera_speed;
-        }
-        if (input_is_key_down(KEY_S))
-        {
-            camera_pos -= cameraFront * camera_speed;
-        }
-        if (input_is_key_down(KEY_A))
-        {
-            camera_pos -= vec3_normalized(vec3_cross(cameraFront, cameraUp)) * camera_speed;
-        }
-        if (input_is_key_down(KEY_D))
-        {
-            camera_pos += vec3_normalized(vec3_cross(cameraFront, cameraUp)) * camera_speed;
-        }
-        if (input_is_key_down(KEY_Z))
-        {
-            fov -= 1;
-            if (fov < 1.0f)
-            {
-                fov = 1.0f;
-            }
-        }
-        if (input_is_key_down(KEY_X))
-        {
-            fov += 1;
-            if (fov > 45.0f)
-            {
-                fov = 45.0f;
-            }
-        }
-
         f32 currentFrame = static_cast<f32>(get_time_sec());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
@@ -257,7 +224,7 @@ int main(void)
         mat4 projection = mat4_perspective(deg_to_rad(fov), (f32)win_width / (f32)win_height, 0.1f, 100.0f);
         u32 projection_loc = glGetUniformLocation(opengl_context.shader_program, "projection");
 
-        mat4 view = mat4_look_at(camera_pos, camera_pos + cameraFront, cameraUp);
+        mat4 view = mat4_look_at(camera_pos, camera_pos + camera_front, camera_up);
         u32 view_loc = glGetUniformLocation(opengl_context.shader_program, "view");
 
         // pass them to the shaders (3 different ways)
@@ -283,6 +250,43 @@ int main(void)
     event_shutdown();
 }
 
+void update_game()
+{
+    f32 camera_speed = static_cast<float>(2.5 * deltaTime);
+    if (input_is_key_down(KEY_W))
+    {
+        camera_pos += camera_front * camera_speed;
+    }
+    if (input_is_key_down(KEY_S))
+    {
+        camera_pos -= camera_front * camera_speed;
+    }
+    if (input_is_key_down(KEY_A))
+    {
+        camera_pos -= vec3_normalized(vec3_cross(camera_front, camera_up)) * camera_speed;
+    }
+    if (input_is_key_down(KEY_D))
+    {
+        camera_pos += vec3_normalized(vec3_cross(camera_front, camera_up)) * camera_speed;
+    }
+    if (input_is_key_down(KEY_Z))
+    {
+        fov -= 1;
+        if (fov < 1.0f)
+        {
+            fov = 1.0f;
+        }
+    }
+    if (input_is_key_down(KEY_X))
+    {
+        fov += 1;
+        if (fov > 45.0f)
+        {
+            fov = 45.0f;
+        }
+    }
+}
+
 bool shutdown(u16 code, void *sender, void *listener_inst, event_context data)
 {
     is_running = false;
@@ -302,22 +306,22 @@ bool mouse_move_callback(u16 code, void *sender, void *listener_inst, event_cont
 
     if (firstMouse)
     {
-        lastX = x_pos;
-        lastY = y_pos;
+        last_x = x_pos;
+        last_y = y_pos;
         firstMouse = false;
     }
 
-    f32 xoffset = x_pos - lastX;
-    f32 yoffset = lastY - y_pos; // reversed since y-coordinates go from bottom to top
-    lastX = x_pos;
-    lastY = y_pos;
+    f32 x_offset = x_pos - last_x;
+    f32 y_offset = last_y - y_pos; // reversed since y-coordinates go from bottom to top
+    last_x = x_pos;
+    last_y = y_pos;
 
     f32 sensitivity = 0.1f; // change this value to your liking
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
+    x_offset *= sensitivity;
+    y_offset *= sensitivity;
 
-    yaw += xoffset;
-    pitch += yoffset;
+    yaw += x_offset;
+    pitch += y_offset;
 
     // make sure that when pitch is out of bounds, screen doesn't get flipped
     if (pitch > 89.0f)
@@ -329,7 +333,7 @@ bool mouse_move_callback(u16 code, void *sender, void *listener_inst, event_cont
     front.x = cos(deg_to_rad(yaw)) * cos(deg_to_rad(pitch));
     front.y = sin(deg_to_rad(pitch));
     front.z = sin(deg_to_rad(yaw)) * cos(deg_to_rad(pitch));
-    cameraFront = front;
+    camera_front = front;
 
     return true;
 }
