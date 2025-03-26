@@ -1,3 +1,4 @@
+#include "core/dmath.hpp"
 #include "core/dtime.hpp"
 #include "core/event.hpp"
 #include "core/input.hpp"
@@ -8,10 +9,6 @@
 #include "platform/platform.hpp"
 
 /* math lib */
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -32,9 +29,9 @@ f32 fov = 45.0f;
 f32 deltaTime = 0.0f; // time between current frame and last frame
 f32 lastFrame = 0.0f;
 
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+vec3 camera_pos = vec3(0.0f, 0.0f, 3.0f);
+vec3 cameraFront = vec3(0.0f, 0.0f, -1.0f);
+vec3 cameraUp = vec3(0.0f, 1.0f, 0.0f);
 
 int main(void)
 {
@@ -209,22 +206,22 @@ int main(void)
         platform_pump_messages(&plat_state);
         input_update(get_time_milli());
 
-        f32 cameraSpeed = static_cast<float>(2.5 * deltaTime);
+        f32 camera_speed = static_cast<float>(2.5 * deltaTime);
         if (input_is_key_down(KEY_W))
         {
-            cameraPos += cameraSpeed * cameraFront;
+            camera_pos += cameraFront * camera_speed;
         }
         if (input_is_key_down(KEY_S))
         {
-            cameraPos -= cameraSpeed * cameraFront;
+            camera_pos -= cameraFront * camera_speed;
         }
         if (input_is_key_down(KEY_A))
         {
-            cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+            camera_pos -= vec3_normalized(vec3_cross(cameraFront, cameraUp)) * camera_speed;
         }
         if (input_is_key_down(KEY_D))
         {
-            cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+            camera_pos += vec3_normalized(vec3_cross(cameraFront, cameraUp)) * camera_speed;
         }
         if (input_is_key_down(KEY_Z))
         {
@@ -257,21 +254,21 @@ int main(void)
 
         glUseProgram(opengl_context.shader_program);
 
-        glm::mat4 projection = glm::perspective(glm::radians(fov), (f32)win_width / (f32)win_height, 0.1f, 100.0f);
+        mat4 projection = mat4_perspective(deg_to_rad(fov), (f32)win_width / (f32)win_height, 0.1f, 100.0f);
         u32 projection_loc = glGetUniformLocation(opengl_context.shader_program, "projection");
 
-        glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+        mat4 view = mat4_look_at(camera_pos, camera_pos + cameraFront, cameraUp);
         u32 view_loc = glGetUniformLocation(opengl_context.shader_program, "view");
 
         // pass them to the shaders (3 different ways)
-        glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(projection_loc, 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(view_loc, 1, GL_FALSE, view.data);
+        glUniformMatrix4fv(projection_loc, 1, GL_FALSE, projection.data);
 
         glBindVertexArray(VAO);
 
-        glm::mat4 model = glm::mat4(1.0f);
+        mat4 model = mat4();
         u32 model_loc = glGetUniformLocation(opengl_context.shader_program, "model");
-        glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(model_loc, 1, GL_FALSE, model.data);
 
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
@@ -328,11 +325,11 @@ bool mouse_move_callback(u16 code, void *sender, void *listener_inst, event_cont
     if (pitch < -89.0f)
         pitch = -89.0f;
 
-    glm::vec3 front;
-    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    front.y = sin(glm::radians(pitch));
-    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(front);
+    vec3 front;
+    front.x = cos(deg_to_rad(yaw)) * cos(deg_to_rad(pitch));
+    front.y = sin(deg_to_rad(pitch));
+    front.z = sin(deg_to_rad(yaw)) * cos(deg_to_rad(pitch));
+    cameraFront = front;
 
     return true;
 }
