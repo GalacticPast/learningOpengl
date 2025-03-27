@@ -397,6 +397,25 @@ class mat4
         data[10] = 1.0f;
         data[15] = 1.0f;
     }
+    inline mat4 operator*(mat4 matrix_1)
+    {
+        mat4 out_matrix = mat4();
+
+        const f32 *m1_ptr = this->data;
+        const f32 *m2_ptr = matrix_1.data;
+        f32 *dst_ptr = out_matrix.data;
+
+        for (s32 i = 0; i < 4; ++i)
+        {
+            for (s32 j = 0; j < 4; ++j)
+            {
+                *dst_ptr = m1_ptr[0] * m2_ptr[0 + j] + m1_ptr[1] * m2_ptr[4 + j] + m1_ptr[2] * m2_ptr[8 + j] + m1_ptr[3] * m2_ptr[12 + j];
+                dst_ptr++;
+            }
+            m1_ptr += 4;
+        }
+        return out_matrix;
+    }
 };
 
 inline mat4 mat4_mul(mat4 matrix_0, mat4 matrix_1)
