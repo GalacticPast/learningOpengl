@@ -206,6 +206,7 @@ int main(void)
     {
         platform_pump_messages(&plat_state);
         input_update(get_time_milli());
+        update_game();
 
         f32 currentFrame = static_cast<f32>(get_time_sec());
         deltaTime = currentFrame - lastFrame;
