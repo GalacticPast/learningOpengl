@@ -7,12 +7,12 @@
 
 #include <string.h>
 
+#include "opengl/opengl_context.hpp"
 #include <X11/XKBlib.h>   // sudo apt-get install libx11-dev
 #include <X11/Xlib-xcb.h> // sudo apt-get install libxkbcommon-x11-dev
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
-
-#include "opengl/opengl_context.hpp"
+#include <sys/time.h>
 
 #include <fstream>
 #include <sstream>
@@ -707,3 +707,10 @@ void platform_get_shaders(std::string *vertex_shader_source, std::string *fragme
     platform_load_file(frag_path, fragment_shader_source);
 }
 #endif
+
+f64 platform_get_absolute_time()
+{
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+    return now.tv_sec + now.tv_nsec * 0.000000001;
+}

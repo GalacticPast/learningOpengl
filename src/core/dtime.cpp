@@ -1,28 +1,19 @@
 #include "dtime.hpp"
+#include "platform/platform.hpp"
 
-static clock_context static_clock_state;
-
-void clock_initialize(clock_context *clock_state)
+void clock_start(clock_context *clock_state)
 {
-    clock_state->start_clock = std::chrono::steady_clock::now();
-    static_clock_state = *clock_state;
+    clock_state->start_time = platform_get_absolute_time();
+    clock_state->elapsed = 0.0f;
 }
-
-f64 get_time_nano()
+void clock_update(clock_context *clock_state)
 {
-    std::chrono::steady_clock::time_point end_clock = std::chrono::steady_clock::now();
-    f64 duration = static_cast<f64>(std::chrono::duration_cast<std::chrono::nanoseconds>(end_clock - static_clock_state.start_clock).count());
-    return duration;
+    if (clock_state->start_time != 0)
+    {
+        clock_state->elapsed = platform_get_absolute_time() - clock_state->start_time;
+    }
 }
-f64 get_time_milli()
+void clock_stop(clock_context *clock_state)
 {
-    std::chrono::steady_clock::time_point end_clock = std::chrono::steady_clock::now();
-    f64 duration = static_cast<f64>(std::chrono::duration_cast<std::chrono::nanoseconds>(end_clock - static_clock_state.start_clock).count());
-    return duration / 1e6;
-}
-f64 get_time_sec()
-{
-    std::chrono::steady_clock::time_point end_clock = std::chrono::steady_clock::now();
-    f64 duration = static_cast<f64>(std::chrono::duration_cast<std::chrono::nanoseconds>(end_clock - static_clock_state.start_clock).count());
-    return duration / 1e9;
+    clock_state->start_time = 0;
 }

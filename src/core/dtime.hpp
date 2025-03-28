@@ -1,15 +1,14 @@
 #pragma once
 #include "defines.hpp"
 
-#include <chrono>
-#include <ctime>
-
 struct clock_context
 {
-    std::chrono::steady_clock::time_point start_clock;
+    // the start time of the clock
+    f64 start_time;
+    // how much time in elapsed since the clock has started
+    f64 elapsed;
 };
 
-void clock_initialize(clock_context *clock_state);
-f64 get_time_nano();
-f64 get_time_milli();
-f64 get_time_sec();
+void clock_start(clock_context *clock_state);
+void clock_update(clock_context *clock_state);
+void clock_stop(clock_context *clock_state);

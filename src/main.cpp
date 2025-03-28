@@ -24,13 +24,11 @@ f32 last_x = 800.0f / 2.0;
 f32 last_y = 600.0 / 2.0;
 f32 fov = 45.0f;
 
-// timing
-f32 deltaTime = 0.0f; // time between current frame and last frame
-f32 lastFrame = 0.0f;
-
 vec3 camera_pos = vec3(0.0f, 0.0f, 3.0f);
 vec3 camera_front = vec3(0.0f, 0.0f, -1.0f);
 vec3 camera_up = vec3(0.0f, 1.0f, 0.0f);
+
+static clock_context frame_clock = {};
 
 int main(void)
 {
@@ -44,9 +42,6 @@ int main(void)
     /* opengl */
     platform_context plat_state = {};
     shader shader = {};
-    clock_context clock_context = {};
-
-    clock_initialize(&clock_context);
 
     input_initialize();
     event_initialize();
@@ -150,13 +145,10 @@ int main(void)
     // -----------
     while (is_running)
     {
+        clock_start(&frame_clock);
         platform_pump_messages(&plat_state);
-        input_update(get_time_milli());
+        input_update(0 /* for now sending 0 time*/);
         update_game();
-
-        f32 currentFrame = static_cast<f32>(get_time_sec());
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -196,7 +188,11 @@ int main(void)
 
 void update_game()
 {
-    f32 camera_speed = static_cast<float>(2.5 * deltaTime);
+    clock_update(&frame_clock);
+    f32 elapsed = static_cast<f32>(frame_clock.elapsed);
+    DINFO("delta time %f", elapsed);
+    f32 camera_speed = static_cast<float>(1e4 * elapsed);
+
     if (input_is_key_down(KEY_W))
     {
         camera_pos += camera_front * camera_speed;
