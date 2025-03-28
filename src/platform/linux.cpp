@@ -714,3 +714,17 @@ f64 platform_get_absolute_time()
     clock_gettime(CLOCK_MONOTONIC_RAW, &now);
     return now.tv_sec + now.tv_nsec * 0.000000001;
 }
+void platform_sleep(u64 ms)
+{
+#    if _POSIX_C_SOURCE >= 199309L
+    struct timespec ts;
+    ts.tv_sec = ms / 1000;
+    ts.tv_nsec = (ms % 1000) * 1000 * 1000;
+    nanosleep(&ts, 0);
+#    else
+    if (ms >= 1000) {
+        sleep(ms / 1000);
+    }
+    usleep((ms % 1000) * 1000);
+#    endif
+}

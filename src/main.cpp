@@ -38,6 +38,7 @@ int main(void)
     s32 win_width = 1270;
     s32 win_height = 800;
     is_running = true;
+    f32 frame_time = 1.0f / 60;
 
     /* opengl */
     platform_context plat_state = {};
@@ -175,6 +176,14 @@ int main(void)
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         platform_swap_buffers(&plat_state);
+
+        clock_update(&frame_clock);
+        f64 elapsed = frame_clock.elapsed;
+
+        if (elapsed < frame_time)
+        {
+            platform_sleep(elapsed * D_SEC_TO_MS_MULTIPLIER);
+        }
     }
 
     glDeleteVertexArrays(1, &VAO);
@@ -190,8 +199,8 @@ void update_game()
 {
     clock_update(&frame_clock);
     f32 elapsed = static_cast<f32>(frame_clock.elapsed);
-    DINFO("delta time %f", elapsed);
-    f32 camera_speed = static_cast<float>(1e4 * elapsed);
+
+    f32 camera_speed = static_cast<float>(2000.5 * elapsed);
 
     if (input_is_key_down(KEY_W))
     {

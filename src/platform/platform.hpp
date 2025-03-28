@@ -29,3 +29,4 @@ void platform_load_file(const char *filepath, std::string *str);
 void platform_get_shaders(std::string *vertex_shader_source, std::string *fragment_shader_source);
 
 f64 platform_get_absolute_time();
+void platform_sleep(u64 ms);
