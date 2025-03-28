@@ -1,4 +1,12 @@
 #pragma once
 #include "opengl/opengl_context.hpp"
 
-void opengl_create_shaders(opengl_context *opengl_context);
+struct shader
+{
+    GLuint program;
+};
+
+void shader_create(shader *shader);
+
+void shader_use(shader *shader);
+void shader_destroy(shader *shader);

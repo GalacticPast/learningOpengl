@@ -3,14 +3,12 @@
 #include "core/event.hpp"
 #include "core/input.hpp"
 #include "core/logger.hpp"
+
 #include "opengl/opengl_context.hpp"
 #include "opengl/shaders.hpp"
+#include "opengl/textures.hpp"
 
 #include "platform/platform.hpp"
-
-/* math lib */
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
 static bool is_running;
 bool shutdown(u16 code, void *sender, void *listener_inst, event_context data);
@@ -45,7 +43,7 @@ int main(void)
 
     /* opengl */
     platform_context plat_state = {};
-    opengl_context opengl_context = {};
+    shader shader = {};
     clock_context clock_context = {};
 
     clock_initialize(&clock_context);
@@ -71,7 +69,7 @@ int main(void)
         return 1;
     }
 
-    opengl_create_shaders(&opengl_context);
+    shader_create(&shader);
 
     // vertex data and attributes;
     // clang-format off
@@ -142,62 +140,10 @@ int main(void)
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(f32), (void *)(3 * sizeof(f32)));
     glEnableVertexAttribArray(1);
 
-    u32 texture_1;
+    texture box_texture;
+    texture_create(&box_texture, "../assets/textures/container.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGB, GL_UNSIGNED_BYTE);
+    texture_create_unit(&box_texture, &shader, "texture_0", 0);
 
-    glGenTextures(1, &texture_1);
-    glBindTexture(GL_TEXTURE_2D, texture_1);
-    // set the texture_1 wrapping/filtering options (on the currently bound texture_1 object)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // load and generate the texture_1
-
-    s32 tex_width, tex_height, tex_nrChannels;
-    stbi_set_flip_vertically_on_load(true);
-    unsigned char *data = stbi_load("../assets/container.jpg", &tex_width, &tex_height, &tex_nrChannels, 0);
-
-    if (data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        DERROR("Failed to load texture_1");
-    }
-
-    stbi_image_free(data);
-
-    u32 texture_2;
-
-    glGenTextures(1, &texture_2);
-    glBindTexture(GL_TEXTURE_2D, texture_2);
-    // set the texture_2 wrapping/filtering options (on the currently bound texture object)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    data = stbi_load("../assets/jolly_roger.jpg", &tex_width, &tex_height, &tex_nrChannels, 0);
-
-    if (data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        DERROR("Failed to load texture_2");
-    }
-
-    stbi_image_free(data);
-
-    glUseProgram(opengl_context.shader_program);
-    glUniform1i(glGetUniformLocation(opengl_context.shader_program, "texture_1"), 0);
-    glUniform1i(glGetUniformLocation(opengl_context.shader_program, "texture_2"), 1);
     glEnable(GL_DEPTH_TEST);
 
     // render loop
@@ -215,18 +161,14 @@ int main(void)
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture_1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture_2);
-
-        glUseProgram(opengl_context.shader_program);
+        shader_use(&shader);
+        texture_bind(&box_texture);
 
         mat4 projection = mat4_perspective(deg_to_rad(fov), (f32)win_width / (f32)win_height, 0.1f, 100.0f);
-        u32 projection_loc = glGetUniformLocation(opengl_context.shader_program, "projection");
+        u32 projection_loc = glGetUniformLocation(shader.program, "projection");
 
         mat4 view = mat4_look_at(camera_pos, camera_pos + camera_front, camera_up);
-        u32 view_loc = glGetUniformLocation(opengl_context.shader_program, "view");
+        u32 view_loc = glGetUniformLocation(shader.program, "view");
 
         // pass them to the shaders (3 different ways)
         glUniformMatrix4fv(view_loc, 1, GL_FALSE, view.data);
@@ -235,7 +177,7 @@ int main(void)
         glBindVertexArray(VAO);
 
         mat4 model = mat4();
-        u32 model_loc = glGetUniformLocation(opengl_context.shader_program, "model");
+        u32 model_loc = glGetUniformLocation(shader.program, "model");
         glUniformMatrix4fv(model_loc, 1, GL_FALSE, model.data);
 
         glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -245,7 +187,8 @@ int main(void)
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteProgram(opengl_context.shader_program);
+    texture_delete(&box_texture);
+    shader_destroy(&shader);
 
     platform_shutdown(&plat_state);
     event_shutdown();

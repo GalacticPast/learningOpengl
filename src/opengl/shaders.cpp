@@ -5,7 +5,7 @@
 
 #include "platform/platform.hpp"
 
-void opengl_create_shaders(opengl_context *opengl_context)
+void shader_create(shader *shader)
 {
     DINFO("Creating vertex and fragment shaders");
     std::string vertex_shader_source;
@@ -53,16 +53,16 @@ void opengl_create_shaders(opengl_context *opengl_context)
         debugBreak();
     }
 
-    opengl_context->shader_program = glCreateProgram();
-    glAttachShader(opengl_context->shader_program, vertex_shader);
-    glAttachShader(opengl_context->shader_program, fragment_shader);
-    glLinkProgram(opengl_context->shader_program);
+    shader->program = glCreateProgram();
+    glAttachShader(shader->program, vertex_shader);
+    glAttachShader(shader->program, fragment_shader);
+    glLinkProgram(shader->program);
 
-    glGetShaderiv(opengl_context->shader_program, GL_LINK_STATUS, &success);
+    glGetShaderiv(shader->program, GL_LINK_STATUS, &success);
 
     if (!success)
     {
-        glGetProgramInfoLog(opengl_context->shader_program, 512, NULL, info_log);
+        glGetProgramInfoLog(shader->program, 512, NULL, info_log);
 
         DERROR("Shader progam linking failed. %s", info_log);
         debugBreak();
@@ -72,4 +72,13 @@ void opengl_create_shaders(opengl_context *opengl_context)
     glDeleteShader(fragment_shader);
 
     DINFO("Succsefully created vertex and fragment shaders");
+}
+
+void shader_use(shader *shader)
+{
+    glUseProgram(shader->program);
+}
+void shader_destroy(shader *shader)
+{
+    glDeleteProgram(shader->program);
 }
