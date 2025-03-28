@@ -12,6 +12,9 @@
 
 #include "opengl/opengl_context.hpp"
 
+static f64 clock_frequency;
+static LARGE_INTEGER start_time;
+
 typedef struct internal_state
 {
     HINSTANCE h_instance;
@@ -26,6 +29,14 @@ static bool opengl_initialized = false;
 
 LRESULT CALLBACK win32_process_message(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param);
 keys translate_keycode(u32 key);
+
+void clock_setup(void)
+{
+    LARGE_INTEGER frequency;
+    QueryPerformanceFrequency(&frequency);
+    clock_frequency = 1.0 / (f64)frequency.QuadPart;
+    QueryPerformanceCounter(&start_time);
+}
 
 LRESULT CALLBACK win32_process_message(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
 {
@@ -103,6 +114,8 @@ bool platform_startup(platform_context *plat_state, std::string application_name
     internal_state *state = (internal_state *)plat_state->internal_state;
 
     state->h_instance = GetModuleHandleA(0);
+
+    clock_setup();
 
     // Setup and register window class.
     HICON icon = LoadIcon(state->h_instance, IDI_APPLICATION);
@@ -343,6 +356,21 @@ void platform_log_message(const char *buffer, log_levels level, u32 max_chars)
     u64 length = strlen(buffer);
     LPDWORD number_written = 0;
     WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), buffer, (DWORD)length, number_written, 0);
+}
+f64 platform_get_absolute_time(void)
+{
+    if (!clock_frequency)
+    {
+        clock_setup();
+    }
+
+    LARGE_INTEGER now_time;
+    QueryPerformanceCounter(&now_time);
+    return (f64)now_time.QuadPart * clock_frequency;
+}
+void platform_sleep(u64 ms)
+{
+    Sleep(ms);
 }
 
 #endif

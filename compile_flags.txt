@@ -1,4 +1,4 @@
 -Isrc
 -Isrc/opengl/extern/
 -D_DEBUG
--DPLATFORM_LINUX
+-DPLATFORM_WINDOWS

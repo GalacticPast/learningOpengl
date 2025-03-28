@@ -179,11 +179,6 @@ int main(void)
 
         clock_update(&frame_clock);
         f64 elapsed = frame_clock.elapsed;
-
-        if (elapsed < frame_time)
-        {
-            platform_sleep(elapsed * D_SEC_TO_MS_MULTIPLIER);
-        }
     }
 
     glDeleteVertexArrays(1, &VAO);
@@ -200,7 +195,7 @@ void update_game()
     clock_update(&frame_clock);
     f32 elapsed = static_cast<f32>(frame_clock.elapsed);
 
-    f32 camera_speed = static_cast<float>(2000.5 * elapsed);
+    f32 camera_speed = static_cast<float>(2.5 * elapsed);
 
     if (input_is_key_down(KEY_W))
     {

@@ -706,7 +706,6 @@ void platform_get_shaders(std::string *vertex_shader_source, std::string *fragme
     platform_load_file(vertex_path, vertex_shader_source);
     platform_load_file(frag_path, fragment_shader_source);
 }
-#endif
 
 f64 platform_get_absolute_time()
 {
@@ -728,3 +727,4 @@ void platform_sleep(u64 ms)
     usleep((ms % 1000) * 1000);
 #    endif
 }
+#endif
