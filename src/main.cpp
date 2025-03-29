@@ -32,6 +32,8 @@ static clock_context frame_clock = {};
 
 int main(void)
 {
+    clock_start(&frame_clock);
+
     std::string application_name = "learnOpengl";
     s32 x = 0;
     s32 y = 0;
@@ -146,7 +148,7 @@ int main(void)
     // -----------
     while (is_running)
     {
-        clock_start(&frame_clock);
+        clock_update(&frame_clock);
         platform_pump_messages(&plat_state);
         input_update(0 /* for now sending 0 time*/);
         update_game();
@@ -176,25 +178,21 @@ int main(void)
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         platform_swap_buffers(&plat_state);
-
-        clock_update(&frame_clock);
-        f64 elapsed = frame_clock.elapsed;
     }
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     texture_delete(&box_texture);
     shader_destroy(&shader);
-
+    clock_stop(&frame_clock);
     platform_shutdown(&plat_state);
     event_shutdown();
 }
 
 void update_game()
 {
-    clock_update(&frame_clock);
     f32 elapsed = static_cast<f32>(frame_clock.elapsed);
-
+    DINFO("Elapsed since start: %fs", elapsed);
     f32 camera_speed = static_cast<float>(2.5 * elapsed);
 
     if (input_is_key_down(KEY_W))
